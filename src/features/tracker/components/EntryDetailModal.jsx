@@ -4,7 +4,7 @@ const EntryDetailModal = ({ entry, onClose }) => {
     if (!entry) return null;
 
     return (
-        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-300">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-6 border-b border-zinc-800 pb-4">

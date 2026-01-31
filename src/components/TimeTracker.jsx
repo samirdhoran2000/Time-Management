@@ -48,6 +48,7 @@ const TimeTracker = () => {
     const [viewingEntry, setViewingEntry] = useState(null); // Entry being viewed
     const [entries, setEntries] = useState([]);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const formRef = React.useRef(null);
 
     // --- Effects ---
 
@@ -183,6 +184,11 @@ const TimeTracker = () => {
             petrolAmount: pAmount,
             petrolLitres: pLitres
         });
+
+        // Scroll to form on mobile
+        if (window.innerWidth < 1024 && formRef.current) {
+            formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     };
 
     const handleDelete = async (id) => {
@@ -254,7 +260,7 @@ const TimeTracker = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-full">
 
                     {/* Left Panel: Input Form */}
-                    <div className="lg:col-span-4 flex flex-col gap-6 lg:overflow-y-auto lg:pr-2 no-scrollbar">
+                    <div ref={formRef} className="lg:col-span-4 flex flex-col gap-6 lg:overflow-y-auto lg:pr-2 no-scrollbar scroll-mt-20">
                         <TrackerForm
                             formData={formData}
                             onChange={handleInputChange}

@@ -39,7 +39,8 @@ const TimeTracker = () => {
         expenses: '',
         kilometres: '',
         location: '',
-        petrol: 'no' // Default per requirement
+        petrolAmount: '',
+        petrolLitres: ''
     });
 
     const [editingId, setEditingId] = useState(null); // ID (index) of entry being edited
@@ -111,7 +112,8 @@ const TimeTracker = () => {
             expenses: '',
             kilometres: '',
             location: '',
-            petrol: 'no'
+            petrolAmount: '',
+            petrolLitres: ''
         });
         setEditingId(null);
     };
@@ -119,9 +121,16 @@ const TimeTracker = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Prepare Petrol Composite
+            let petrolValue = 'no';
+            if (formData.petrolAmount && formData.petrolLitres) {
+                petrolValue = `${formData.petrolAmount} | ${formData.petrolLitres}`;
+            } else if (formData.petrolAmount) {
+                petrolValue = `${formData.petrolAmount} | -`;
+            }
+
             // Prepare Row Data
             // Columns: [Date, Day, InTime, OutTime, Charges, Expenses, Kilometres, Location, Petrol]
-            // Date needs formatting to dd-mm-yyyy
             const rowToSave = [
                 formatDateForSheet(formData.date),
                 formData.day,
@@ -131,7 +140,7 @@ const TimeTracker = () => {
                 formData.expenses,
                 formData.kilometres,
                 formData.location,
-                formData.petrol
+                petrolValue
             ];
 
             if (editingId !== null) {
@@ -151,6 +160,16 @@ const TimeTracker = () => {
         setEditingId(entry.id);
         const isoDate = parseDateFromSheet(entry.date);
 
+        // Parse Petrol
+        let pAmount = '';
+        let pLitres = '';
+        if (entry.petrol && entry.petrol !== 'no') {
+            const parts = entry.petrol.split('|');
+            if (parts.length >= 1) pAmount = parts[0].trim();
+            if (parts.length >= 2) pLitres = parts[1].trim();
+            if (pLitres === '-') pLitres = '';
+        }
+
         setFormData({
             date: isoDate,
             day: entry.day,
@@ -160,7 +179,8 @@ const TimeTracker = () => {
             expenses: entry.expenses,
             kilometres: entry.kilometres,
             location: entry.location,
-            petrol: entry.petrol
+            petrolAmount: pAmount,
+            petrolLitres: pLitres
         });
     };
 

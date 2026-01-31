@@ -131,19 +131,40 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                         </label>
                     </div>
 
-                    {/* 9. Petrol */}
-                    <div className="relative">
-                        <input
-                            type="text"
-                            name="petrol"
-                            value={formData.petrol}
-                            onChange={onChange}
-                            placeholder="no"
-                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                        />
-                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                            Petrol
-                        </label>
+                    {/* 9. Petrol Group */}
+                    {/* 9. Petrol Group */}
+                    <div className="flex items-end gap-3">
+                        <div className="relative flex-1">
+                            <input
+                                type="number"
+                                name="petrolAmount"
+                                value={formData.petrolAmount || ''}
+                                onChange={onChange}
+                                step="any"
+                                placeholder="Amount"
+                                className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                            />
+                            <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 pointer-events-none transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                Petrol (₹)
+                            </label>
+                        </div>
+
+                        <div className="pb-3 text-zinc-600 font-light">/</div>
+
+                        <div className="relative flex-1">
+                            <input
+                                type="number"
+                                name="petrolLitres"
+                                value={formData.petrolLitres || ''}
+                                onChange={onChange}
+                                step="any"
+                                placeholder="Litres"
+                                className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                            />
+                            <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 pointer-events-none transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                Litres (L)
+                            </label>
+                        </div>
                     </div>
                 </div>
 

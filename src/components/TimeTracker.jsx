@@ -186,9 +186,9 @@ const TimeTracker = () => {
 
     // 3. Dashboard State
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-200 font-sans selection:bg-indigo-500/30 pb-20">
+        <div className="h-screen bg-zinc-950 text-zinc-200 font-sans selection:bg-indigo-500/30 flex flex-col overflow-hidden">
             {/* Top Navigation */}
-            <nav className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
+            <nav className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md shrink-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
@@ -209,13 +209,13 @@ const TimeTracker = () => {
                 </div>
             </nav>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-y-auto lg:overflow-hidden">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-full">
 
                     {/* Left Panel: Stats & Input */}
-                    <div className="lg:col-span-4 space-y-8">
+                    <div className="lg:col-span-4 flex flex-col gap-6 lg:overflow-y-auto lg:pr-2 no-scrollbar">
                         {/* Summary Card */}
-                        <div className="relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 p-6 sm:p-8 group shadow-2xl shadow-indigo-500/5">
+                        <div className="relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 p-3 sm:p-8 group shadow-2xl shadow-indigo-500/5 shrink-0">
                             <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                                 <div className="w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
                             </div>
@@ -231,13 +231,13 @@ const TimeTracker = () => {
                         </div>
 
                         {/* Input Form */}
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/50 shrink-0">
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-5">
                                 <span className="w-1 h-5 bg-indigo-500 rounded-full"></span>
                                 New Entry
                             </h3>
 
-                            <form onSubmit={handleSubmit} className="space-y-5 bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/50">
+                            <form onSubmit={handleSubmit} className="space-y-5">
                                 <div className="space-y-4">
                                     <div className="relative">
                                         <input
@@ -288,8 +288,8 @@ const TimeTracker = () => {
                                                     type="button"
                                                     onClick={() => setStatus(s)}
                                                     className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-all ${status === s
-                                                            ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-500/25'
-                                                            : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
+                                                        ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-500/25'
+                                                        : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
                                                         }`}
                                                 >
                                                     {s}
@@ -312,8 +312,8 @@ const TimeTracker = () => {
                     </div>
 
                     {/* Right Panel: List */}
-                    <div className="lg:col-span-8 space-y-6">
-                        <div className="flex items-center justify-between">
+                    <div className="lg:col-span-8 flex flex-col h-full overflow-hidden">
+                        <div className="flex items-center justify-between mb-4 shrink-0">
                             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                                 History
                                 <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-400 font-medium border border-zinc-700">{entries.length}</span>
@@ -326,10 +326,10 @@ const TimeTracker = () => {
                             </button>
                         </div>
 
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-zinc-900/50 border-b border-zinc-800">
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
+                            <div className="overflow-x-auto lg:overflow-y-auto lg:flex-1 no-scrollbar">
+                                <table className="w-full text-left relative">
+                                    <thead className="bg-zinc-900/95 backdrop-blur border-b border-zinc-800 sticky top-0 z-10">
                                         <tr>
                                             <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
                                             <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider w-1/2">Task</th>

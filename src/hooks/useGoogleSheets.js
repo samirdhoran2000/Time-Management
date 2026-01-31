@@ -6,6 +6,7 @@ export const useGoogleSheets = () => {
     const [credentials, setCredentials] = useState(null);
     const [spreadsheetId, setSpreadsheetId] = useState('');
     const [sheetName, setSheetName] = useState('Sheet1');
+    const [allSheets, setAllSheets] = useState([]); // List of {title, sheetId}
 
     // State for Session
     const [accessToken, setAccessToken] = useState(null);
@@ -94,10 +95,17 @@ export const useGoogleSheets = () => {
             const metadataRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties&key=${tokenData.access_token}`);
             if (metadataRes.ok) {
                 const metadata = await metadataRes.json();
-                const firstSheet = metadata.sheets[0];
-                setSheetName(firstSheet.properties.title);
-                // Store GID for deletions
-                localStorage.setItem('time_mgmt_sheet_gid', firstSheet.properties.sheetId);
+                const sheets = metadata.sheets.map(s => s.properties);
+                setAllSheets(sheets);
+
+                // If current sheetName isn't in the list, default to first
+                const exists = sheets.find(s => s.title === sheetName);
+                if (!exists && sheets.length > 0) {
+                    setSheetName(sheets[0].title);
+                    localStorage.setItem('time_mgmt_sheet_gid', sheets[0].sheetId);
+                } else if (exists) {
+                    localStorage.setItem('time_mgmt_sheet_gid', exists.sheetId);
+                }
             }
 
         } catch (err) {
@@ -240,11 +248,66 @@ export const useGoogleSheets = () => {
         }
     }, [accessToken, spreadsheetId]);
 
+    // Create New Sheet
+    const createSheet = useCallback(async (name) => {
+        if (!accessToken || !spreadsheetId) return;
+
+        setLoading(true);
+        try {
+            // 1. Create the sheet
+            const createUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
+            const createRes = await fetch(createUrl, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    requests: [{
+                        addSheet: {
+                            properties: { title: name }
+                        }
+                    }]
+                })
+            });
+
+            const createResult = await createRes.json();
+            if (createResult.error) throw new Error(createResult.error.message);
+
+            const newSheetProps = createResult.replies[0].addSheet.properties;
+
+            // 2. Initialize Headers in the new sheet
+            const headers = ['Date', 'Day', 'InTime', 'OutTime', 'Charges', 'Expenses', 'Kilometres', 'Location', 'Petrol'];
+            const headerUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${name}!A1:Z1?valueInputOption=USER_ENTERED`;
+            await fetch(headerUrl, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ values: [headers] })
+            });
+
+            // 3. Update State
+            setSheetName(name);
+            setAllSheets(prev => [...prev, newSheetProps]);
+            localStorage.setItem('time_mgmt_sheet_gid', newSheetProps.sheetId);
+
+            return createResult;
+        } catch (err) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [accessToken, spreadsheetId]);
+
     return {
         // State
         credentials,
         spreadsheetId,
         sheetName,
+        allSheets,
         accessToken,
         loading,
         error,
@@ -260,6 +323,7 @@ export const useGoogleSheets = () => {
         fetchRows,
         appendRow,
         updateRow,
-        deleteRow
+        deleteRow,
+        createSheet
     };
 };

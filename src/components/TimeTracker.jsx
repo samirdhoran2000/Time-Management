@@ -15,17 +15,20 @@ const TimeTracker = () => {
         credentials,
         spreadsheetId,
         sheetName,
+        allSheets,
         accessToken,
         loading,
         error,
         saveCredentials,
         updateSpreadsheetId,
+        setSheetName,
         authenticate,
         logout,
         fetchRows,
         appendRow,
         updateRow,
-        deleteRow
+        deleteRow,
+        createSheet
     } = useGoogleSheets();
 
     // --- State ---
@@ -59,12 +62,12 @@ const TimeTracker = () => {
         }
     }, [credentials, spreadsheetId, accessToken, loading, authenticate]);
 
-    // 2. Load Data on Auth
+    // 2. Load Data on Auth or Sheet Change
     useEffect(() => {
-        if (accessToken) {
+        if (accessToken && sheetName) {
             loadData();
         }
-    }, [accessToken]);
+    }, [accessToken, sheetName]);
 
     // 3. Update 'Day' when 'Date' changes
     useEffect(() => {
@@ -202,6 +205,18 @@ const TimeTracker = () => {
         }
     };
 
+    const handleAddSheet = async () => {
+        const name = prompt("Enter new sheet name (e.g., February 2026):");
+        if (name && name.trim()) {
+            try {
+                await createSheet(name.trim());
+                // Data will reload via useEffect[sheetName]
+            } catch (err) {
+                alert("Error creating sheet: " + err.message);
+            }
+        }
+    };
+
     // --- Views ---
 
     // 1. Initial State: Upload Credentials
@@ -238,9 +253,23 @@ const TimeTracker = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="hidden sm:flex items-center gap-2 text-xs font-medium px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            {sheetName}
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={sheetName}
+                                onChange={(e) => setSheetName(e.target.value)}
+                                className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-300 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer"
+                            >
+                                {allSheets.map(s => (
+                                    <option key={s.sheetId} value={s.title}>{s.title}</option>
+                                ))}
+                            </select>
+                            <button
+                                onClick={handleAddSheet}
+                                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-indigo-400 hover:border-indigo-500/50 transition-all shadow-sm"
+                                title="Add New Sheet"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                            </button>
                         </div>
                         <button onClick={logout} className="text-sm font-medium text-zinc-500 hover:text-white transition-colors">
                             Disconnect

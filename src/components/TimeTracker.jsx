@@ -14,7 +14,9 @@ const TimeTracker = () => {
         authenticate,
         logout,
         fetchRows,
-        appendRow
+        appendRow,
+        updateRow,
+        deleteRow
     } = useGoogleSheets();
 
     // Schema: Task Name, Date, Duration, Status
@@ -22,6 +24,9 @@ const TimeTracker = () => {
     const [duration, setDuration] = useState('');
     const [status, setStatus] = useState('Pending');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+
+    // Edit Mode State
+    const [editingId, setEditingId] = useState(null); // ID of entry being edited
 
     const [entries, setEntries] = useState([]);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -45,7 +50,7 @@ const TimeTracker = () => {
         const rows = await fetchRows();
         if (rows) {
             // Assuming Row 1 is headers: Task, Date, Duration, Status
-            // We map the rest
+            // We map the rest - keep ID as index
             const mapped = rows.slice(1).map((r, i) => ({
                 id: i,
                 task: r[0],
@@ -61,8 +66,15 @@ const TimeTracker = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Append row: [Task, Date, Duration, Status]
-            await appendRow([taskName, date, duration, status]);
+            if (editingId !== null) {
+                // Update existing
+                await updateRow(editingId, [taskName, date, duration, status]);
+                setEditingId(null);
+            } else {
+                // Append new
+                await appendRow([taskName, date, duration, status]);
+            }
+
             // Clear form
             setTaskName('');
             setDuration('');
@@ -70,7 +82,33 @@ const TimeTracker = () => {
             // Reload
             loadData();
         } catch (err) {
-            alert("Error adding task: " + err.message);
+            alert("Error saving: " + err.message);
+        }
+    };
+
+    const handleEdit = (entry) => {
+        setEditingId(entry.id);
+        setTaskName(entry.task);
+        setDate(entry.date);
+        setDuration(entry.duration);
+        setStatus(entry.status);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setTaskName('');
+        setDuration('');
+        setStatus('Pending');
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Are you sure you want to delete this entry?")) {
+            try {
+                await deleteRow(id);
+                loadData();
+            } catch (err) {
+                alert("Error deleting: " + err.message);
+            }
         }
     };
 
@@ -234,7 +272,7 @@ const TimeTracker = () => {
                         <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/50 shrink-0">
                             <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-5">
                                 <span className="w-1 h-5 bg-indigo-500 rounded-full"></span>
-                                New Entry
+                                {editingId !== null ? 'Edit Entry' : 'New Entry'}
                             </h3>
 
                             <form onSubmit={handleSubmit} className="space-y-5">
@@ -263,7 +301,7 @@ const TimeTracker = () => {
                                                 placeholder="0.0"
                                                 className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-3 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
                                             />
-                                            <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                            <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
                                                 Duration (h)
                                             </label>
                                         </div>
@@ -299,14 +337,25 @@ const TimeTracker = () => {
                                     </div>
                                 </div>
 
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full bg-white text-black hover:bg-zinc-200 py-3.5 rounded-xl font-bold shadow-lg shadow-white/5 transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-4"
-                                >
-                                    {loading ? 'Saving...' : 'Add Entry'}
-                                    {!loading && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>}
-                                </button>
+                                <div className="flex gap-3">
+                                    {editingId !== null && (
+                                        <button
+                                            type="button"
+                                            onClick={handleCancelEdit}
+                                            className="w-1/3 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 py-3.5 rounded-xl font-bold transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                    )}
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="flex-1 bg-white text-black hover:bg-zinc-200 py-3.5 rounded-xl font-bold shadow-lg shadow-white/5 transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                                    >
+                                        {loading ? 'Saving...' : (editingId !== null ? 'Update Entry' : 'Add Entry')}
+                                        {!loading && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>}
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -332,15 +381,16 @@ const TimeTracker = () => {
                                     <thead className="bg-zinc-900/95 backdrop-blur border-b border-zinc-800 sticky top-0 z-10">
                                         <tr>
                                             <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
-                                            <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider w-1/2">Task</th>
+                                            <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider w-1/3">Task</th>
                                             <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Dur.</th>
                                             <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-center">Status</th>
+                                            <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-zinc-800">
                                         {entries.length === 0 ? (
                                             <tr>
-                                                <td colSpan="4" className="px-6 py-16 text-center">
+                                                <td colSpan="5" className="px-6 py-16 text-center">
                                                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800 mb-4 opacity-50">
                                                         <svg className="w-6 h-6 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                                                     </div>
@@ -358,6 +408,24 @@ const TimeTracker = () => {
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusStyles(e.status)}`}>
                                                             {e.status}
                                                         </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={() => handleEdit(e)}
+                                                                className="p-1.5 rounded-md text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                                                                title="Edit"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(e.id)}
+                                                                className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                                                title="Delete"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))

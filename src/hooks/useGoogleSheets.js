@@ -88,13 +88,25 @@ export const useGoogleSheets = () => {
 
             const tokenData = await response.json();
             setAccessToken(tokenData.access_token);
+
+            // Fetch Sheet Details (Name and GID)
+            // We assume we are working with the first sheet
+            const metadataRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties&key=${tokenData.access_token}`);
+            if (metadataRes.ok) {
+                const metadata = await metadataRes.json();
+                const firstSheet = metadata.sheets[0];
+                setSheetName(firstSheet.properties.title);
+                // Store GID for deletions
+                localStorage.setItem('time_mgmt_sheet_gid', firstSheet.properties.sheetId);
+            }
+
         } catch (err) {
             console.error(err);
             setError(err.message);
         } finally {
             setLoading(false);
         }
-    }, [credentials]);
+    }, [credentials, spreadsheetId]);
 
     // Read Data
     const fetchRows = useCallback(async () => {
@@ -147,6 +159,87 @@ export const useGoogleSheets = () => {
         }
     }, [accessToken, spreadsheetId, sheetName]);
 
+    // Update Row
+    const updateRow = useCallback(async (rowIndex, rowArray) => {
+        if (!accessToken || !spreadsheetId) return;
+
+        // rowIndex is 0-based index from the UI entries (which excludes header)
+        // So UI index 0 -> Sheet Row 2
+        const range = `${sheetName}!A${rowIndex + 2}`;
+
+        setLoading(true);
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`;
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                // We update just the row
+                body: JSON.stringify({ values: [rowArray] })
+            });
+
+            const result = await res.json();
+            if (result.error) throw new Error(result.error.message);
+            return result;
+        } catch (err) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [accessToken, spreadsheetId, sheetName]);
+
+    // Delete Row
+    const deleteRow = useCallback(async (rowIndex) => {
+        if (!accessToken || !spreadsheetId) return;
+
+        // Need GID
+        const sheetId = localStorage.getItem('time_mgmt_sheet_gid');
+        if (sheetId === null) {
+            setError("Sheet GID not found. Please reconnect.");
+            return;
+        }
+
+        // rowIndex 0 (UI) -> Row 2 (Sheet) -> Index 1 (API)
+        const startIndex = rowIndex + 1;
+        const endIndex = startIndex + 1;
+
+        setLoading(true);
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    requests: [{
+                        deleteDimension: {
+                            range: {
+                                sheetId: parseInt(sheetId),
+                                dimension: 'ROWS',
+                                startIndex: startIndex,
+                                endIndex: endIndex
+                            }
+                        }
+                    }]
+                })
+            });
+
+            const result = await res.json();
+            if (result.error) throw new Error(result.error.message);
+            return result;
+        } catch (err) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [accessToken, spreadsheetId]);
+
     return {
         // State
         credentials,
@@ -165,6 +258,8 @@ export const useGoogleSheets = () => {
         authenticate,
         logout,
         fetchRows,
-        appendRow
+        appendRow,
+        updateRow,
+        deleteRow
     };
 };

@@ -19,67 +19,163 @@ const TimeTracker = () => {
         deleteRow
     } = useGoogleSheets();
 
-    // Schema: Task Name, Date, Duration, Status
-    const [taskName, setTaskName] = useState('');
-    const [duration, setDuration] = useState('');
-    const [status, setStatus] = useState('Pending');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    // --- Helpers ---
+    const getTodayLocal = () => {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
 
-    // Edit Mode State
-    const [editingId, setEditingId] = useState(null); // ID of entry being edited
+    const formatDateForSheet = (isoDate) => {
+        // Input: yyyy-mm-dd -> Output: dd-mm-yyyy
+        if (!isoDate) return '';
+        const [y, m, d] = isoDate.split('-');
+        return `${d}-${m}-${y}`;
+    };
 
+    const parseDateFromSheet = (sheetDate) => {
+        // Input: dd-mm-yyyy -> Output: yyyy-mm-dd
+        // Also handle legacy colons just in case? Or just stick to new format.
+        if (!sheetDate) return '';
+
+        // Try dash first
+        if (sheetDate.includes('-')) {
+            const parts = sheetDate.split('-');
+            if (parts.length !== 3) return sheetDate;
+            const [d, m, y] = parts;
+            return `${y}-${m}-${d}`;
+        }
+
+        // Fallback for previous colon format (optional, but good for UX if they edit old rows)
+        if (sheetDate.includes(':')) {
+            const parts = sheetDate.split(':');
+            if (parts.length !== 3) return sheetDate;
+            const [d, m, y] = parts;
+            return `${y}-${m}-${d}`;
+        }
+
+        return sheetDate;
+    };
+
+
+    // --- State ---
+
+    // Form State (Internal is yyyy-mm-dd for inputs, etc)
+    const [formData, setFormData] = useState({
+        date: getTodayLocal(),
+        day: '',
+        inTime: '12:00 PM', // Default per requirement
+        outTime: '',
+        charges: '909.0900909', // Default per requirement
+        expenses: '',
+        kilometres: '',
+        location: '',
+        petrol: 'no' // Default per requirement
+    });
+
+    const [editingId, setEditingId] = useState(null); // ID (index) of entry being edited
+    const [viewingEntry, setViewingEntry] = useState(null); // Entry being viewed
     const [entries, setEntries] = useState([]);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    // Auto-auth
+    // --- Effects ---
+
+    // 1. Auto-auth
     useEffect(() => {
         if (credentials && spreadsheetId && !accessToken && !loading) {
             authenticate();
         }
     }, [credentials, spreadsheetId, accessToken, loading, authenticate]);
 
-    // Load Data
+    // 2. Load Data on Auth
     useEffect(() => {
         if (accessToken) {
             loadData();
         }
     }, [accessToken]);
 
+    // 3. Update 'Day' when 'Date' changes
+    useEffect(() => {
+        if (formData.date) {
+            const dateObj = new Date(formData.date);
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayName = days[dateObj.getDay()];
+            setFormData(prev => ({ ...prev, day: dayName }));
+        }
+    }, [formData.date]);
+
+
+    // --- Actions ---
+
     const loadData = async () => {
         setIsRefreshing(true);
         const rows = await fetchRows();
         if (rows) {
-            // Assuming Row 1 is headers: Task, Date, Duration, Status
-            // We map the rest - keep ID as index
+            // Assuming Row 1 is headers.
             const mapped = rows.slice(1).map((r, i) => ({
                 id: i,
-                task: r[0],
-                date: r[1],
-                duration: r[2],
-                status: r[3]
+                date: r[0] || '', // dd:mm:yyyy
+                day: r[1] || '',
+                inTime: r[2] || '',
+                outTime: r[3] || '',
+                charges: r[4] || '',
+                expenses: r[5] || '',
+                kilometres: r[6] || '',
+                location: r[7] || '',
+                petrol: r[8] || ''
             }));
             setEntries(mapped);
         }
         setIsRefreshing(false);
     };
 
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const resetForm = () => {
+        setFormData({
+            date: getTodayLocal(),
+            day: '', // Will update via useEffect
+            inTime: '12:00 PM',
+            outTime: '',
+            charges: '909.0900909',
+            expenses: '',
+            kilometres: '',
+            location: '',
+            petrol: 'no'
+        });
+        setEditingId(null);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Prepare Row Data
+            // Columns: [Date, Day, InTime, OutTime, Charges, Expenses, Kilometres, Location, Petrol]
+            // Date needs formatting to dd:mm:yyyy
+            const rowToSave = [
+                formatDateForSheet(formData.date),
+                formData.day,
+                formData.inTime,
+                formData.outTime,
+                formData.charges,
+                formData.expenses,
+                formData.kilometres,
+                formData.location,
+                formData.petrol
+            ];
+
             if (editingId !== null) {
-                // Update existing
-                await updateRow(editingId, [taskName, date, duration, status]);
-                setEditingId(null);
+                await updateRow(editingId, rowToSave);
             } else {
-                // Append new
-                await appendRow([taskName, date, duration, status]);
+                await appendRow(rowToSave);
             }
 
-            // Clear form
-            setTaskName('');
-            setDuration('');
-            setStatus('Pending');
-            // Reload
+            resetForm();
             loadData();
         } catch (err) {
             alert("Error saving: " + err.message);
@@ -88,17 +184,19 @@ const TimeTracker = () => {
 
     const handleEdit = (entry) => {
         setEditingId(entry.id);
-        setTaskName(entry.task);
-        setDate(entry.date);
-        setDuration(entry.duration);
-        setStatus(entry.status);
-    };
+        const isoDate = parseDateFromSheet(entry.date);
 
-    const handleCancelEdit = () => {
-        setEditingId(null);
-        setTaskName('');
-        setDuration('');
-        setStatus('Pending');
+        setFormData({
+            date: isoDate,
+            day: entry.day,
+            inTime: entry.inTime,
+            outTime: entry.outTime,
+            charges: entry.charges,
+            expenses: entry.expenses,
+            kilometres: entry.kilometres,
+            location: entry.location,
+            petrol: entry.petrol
+        });
     };
 
     const handleDelete = async (id) => {
@@ -124,20 +222,6 @@ const TimeTracker = () => {
             }
         };
         reader.readAsText(file);
-    };
-
-    // Calculate stats
-    const totalHours = entries.reduce((acc, curr) => {
-        const d = parseFloat(curr.duration) || 0;
-        return acc + d;
-    }, 0);
-
-    const getStatusStyles = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'done': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-            case 'in progress': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-            default: return 'bg-zinc-800 text-zinc-400 border-zinc-700';
-        }
     };
 
     // --- Views ---
@@ -247,26 +331,98 @@ const TimeTracker = () => {
                 </div>
             </nav>
 
-            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-y-auto lg:overflow-hidden">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-full">
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-y-auto lg:overflow-hidden relative">
 
-                    {/* Left Panel: Stats & Input */}
-                    <div className="lg:col-span-4 flex flex-col gap-6 lg:overflow-y-auto lg:pr-2 no-scrollbar">
-                        {/* Summary Card */}
-                        <div className="relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 p-3 sm:p-8 group shadow-2xl shadow-indigo-500/5 shrink-0">
-                            <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                <div className="w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                            </div>
+                {/* View Modal */}
+                {viewingEntry && (
+                    <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-300">
+                            <div className="p-6">
+                                <div className="flex items-center justify-between mb-6 border-b border-zinc-800 pb-4">
+                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                        </div>
+                                        Entry Details
+                                    </h3>
+                                    <button
+                                        onClick={() => setViewingEntry(null)}
+                                        className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-white transition-colors"
+                                    >
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
+                                </div>
 
-                            <h3 className="text-zinc-500 text-xs font-semibold uppercase tracking-widest mb-2">Total Logged</h3>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-5xl sm:text-6xl font-bold text-white tracking-tight">{totalHours}</span>
-                                <span className="text-xl text-zinc-500 font-medium">hrs</span>
-                            </div>
-                            <div className="mt-6 w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-                                <div className="h-full bg-indigo-500 w-2/3 rounded-full"></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Date & Day</label>
+                                        <p className="text-lg text-white font-medium">{viewingEntry.date}</p>
+                                        <p className="text-sm text-indigo-400">{viewingEntry.day}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Timing</label>
+                                        <div className="flex gap-2 text-zinc-300">
+                                            <span>In: <strong className="text-white">{viewingEntry.inTime}</strong></span>
+                                            <span>•</span>
+                                            <span>Out: <strong className="text-white">{viewingEntry.outTime || '-'}</strong></span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1 md:col-span-2 bg-zinc-800/50 p-4 rounded-xl border border-zinc-800">
+                                        <label className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-2 block">Descriptions & Notes</label>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <span className="text-xs text-zinc-500 block mb-1">Expenses</span>
+                                                <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">{viewingEntry.expenses || 'None'}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-xs text-zinc-500 block mb-1">Location</span>
+                                                <p className="text-sm text-white">{viewingEntry.location || '-'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Financials</label>
+                                        <div className="flex items-center gap-4">
+                                            <div>
+                                                <span className="text-xs text-zinc-500 block">Charges</span>
+                                                <p className="text-white font-mono">{viewingEntry.charges}</p>
+                                            </div>
+                                            <div>
+                                                <span className="text-xs text-zinc-500 block">Petrol</span>
+                                                <p className="text-white">{viewingEntry.petrol}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Travel</label>
+                                        <div>
+                                            <span className="text-xs text-zinc-500 block">Kilometres</span>
+                                            <p className="text-white font-mono">{viewingEntry.kilometres}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 pt-4 border-t border-zinc-800 flex justify-end">
+                                    <button
+                                        onClick={() => setViewingEntry(null)}
+                                        className="bg-white text-black hover:bg-zinc-200 px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-white/5"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                )}
+
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-full">
+
+                    {/* Left Panel: Input Form */}
+                    <div className="lg:col-span-4 flex flex-col gap-6 lg:overflow-y-auto lg:pr-2 no-scrollbar">
 
                         {/* Input Form */}
                         <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/50 shrink-0">
@@ -276,72 +432,150 @@ const TimeTracker = () => {
                             </h3>
 
                             <form onSubmit={handleSubmit} className="space-y-5">
-                                <div className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+                                    {/* 1. Date */}
                                     <div className="relative">
                                         <input
-                                            value={taskName}
-                                            onChange={e => setTaskName(e.target.value)}
+                                            type="date"
+                                            name="date"
+                                            value={formData.date}
+                                            onChange={handleInputChange}
                                             required
-                                            placeholder="What are you working on?"
-                                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-3 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white focus:ring-0 focus:border-indigo-500 transition-colors [color-scheme:dark]"
+                                        />
+                                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500">Date</label>
+                                    </div>
+
+                                    {/* 2. Day */}
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="day"
+                                            value={formData.day}
+                                            onChange={handleInputChange}
+                                            placeholder="Day"
+                                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
                                         />
                                         <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                                            Task Description
+                                            Day
                                         </label>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="relative">
-                                            <input
-                                                type="number"
-                                                step="0.1"
-                                                value={duration}
-                                                onChange={e => setDuration(e.target.value)}
-                                                required
-                                                placeholder="0.0"
-                                                className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-3 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                                            />
-                                            <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                                                Duration (h)
-                                            </label>
-                                        </div>
-                                        <div className="relative">
-                                            <input
-                                                type="date"
-                                                value={date}
-                                                onChange={e => setDate(e.target.value)}
-                                                required
-                                                className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-3 text-white focus:ring-0 focus:border-indigo-500 transition-colors [color-scheme:dark]"
-                                            />
-                                            <label className="absolute left-0 -top-2.5 text-xs text-zinc-500">Date</label>
-                                        </div>
+                                    {/* 3. In Time */}
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="inTime"
+                                            value={formData.inTime}
+                                            onChange={handleInputChange}
+                                            placeholder="12:00 PM"
+                                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                                        />
+                                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                            In Time
+                                        </label>
                                     </div>
 
-                                    <div className="space-y-3 pt-2">
-                                        <label className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Status</label>
-                                        <div className="flex gap-2">
-                                            {['Pending', 'In Progress', 'Done'].map(s => (
-                                                <button
-                                                    key={s}
-                                                    type="button"
-                                                    onClick={() => setStatus(s)}
-                                                    className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-all ${status === s
-                                                        ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-500/25'
-                                                        : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'
-                                                        }`}
-                                                >
-                                                    {s}
-                                                </button>
-                                            ))}
-                                        </div>
+                                    {/* 4. Out Time */}
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="outTime"
+                                            value={formData.outTime}
+                                            onChange={handleInputChange}
+                                            placeholder="06:00 PM"
+                                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                                        />
+                                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                            Out Time
+                                        </label>
+                                    </div>
+
+                                    {/* 5. Charges */}
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            name="charges"
+                                            value={formData.charges}
+                                            onChange={handleInputChange}
+                                            placeholder="909.09"
+                                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                                        />
+                                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                            Charges
+                                        </label>
+                                    </div>
+
+                                    {/* 6. Expenses */}
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="expenses"
+                                            value={formData.expenses}
+                                            onChange={handleInputChange}
+                                            placeholder="0"
+                                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                                        />
+                                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                            Expenses
+                                        </label>
+                                    </div>
+
+                                    {/* 7. Kilometres */}
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            name="kilometres"
+                                            value={formData.kilometres}
+                                            onChange={handleInputChange}
+                                            placeholder="0"
+                                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                                        />
+                                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                            Kilometres
+                                        </label>
+                                    </div>
+
+                                    {/* 8. Location */}
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="location"
+                                            value={formData.location}
+                                            onChange={handleInputChange}
+                                            placeholder="City"
+                                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                                        />
+                                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                            Location
+                                        </label>
+                                    </div>
+
+                                    {/* 9. Petrol */}
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="petrol"
+                                            value={formData.petrol}
+                                            onChange={handleInputChange}
+                                            placeholder="no"
+                                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                                        />
+                                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                            Petrol
+                                        </label>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-3">
+                                {/* Buttons */}
+                                <div className="flex gap-3 pt-4">
                                     {editingId !== null && (
                                         <button
                                             type="button"
-                                            onClick={handleCancelEdit}
+                                            onClick={resetForm}
                                             className="w-1/3 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 py-3.5 rounded-xl font-bold transition-all"
                                         >
                                             Cancel
@@ -380,37 +614,50 @@ const TimeTracker = () => {
                                 <table className="w-full text-left relative">
                                     <thead className="bg-zinc-900/95 backdrop-blur border-b border-zinc-800 sticky top-0 z-10">
                                         <tr>
-                                            <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
-                                            <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider w-1/3">Task</th>
-                                            <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Dur.</th>
-                                            <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-center">Status</th>
-                                            <th className="px-6 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Actions</th>
+                                            <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
+                                            <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Day</th>
+                                            <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">In</th>
+                                            <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Out</th>
+                                            <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Charges</th>
+                                            <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Exp.</th>
+                                            <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Km</th>
+                                            <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Loc.</th>
+                                            <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Fuel</th>
+                                            <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-zinc-800">
                                         {entries.length === 0 ? (
                                             <tr>
-                                                <td colSpan="5" className="px-6 py-16 text-center">
+                                                <td colSpan="10" className="px-6 py-16 text-center">
                                                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800 mb-4 opacity-50">
                                                         <svg className="w-6 h-6 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                                                     </div>
-                                                    <p className="text-zinc-500 text-sm font-medium">No activity yet</p>
-                                                    <p className="text-zinc-600 text-xs mt-1">Your logged tasks will appear here.</p>
+                                                    <p className="text-zinc-500 text-sm font-medium">No entries yet</p>
+                                                    <p className="text-zinc-600 text-xs mt-1">Start by adding a new entry.</p>
                                                 </td>
                                             </tr>
                                         ) : (
                                             entries.map((e) => (
                                                 <tr key={e.id} className="group hover:bg-zinc-800/50 transition-colors">
-                                                    <td className="px-6 py-4 text-sm text-zinc-400 font-mono whitespace-nowrap">{e.date}</td>
-                                                    <td className="px-6 py-4 text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">{e.task}</td>
-                                                    <td className="px-6 py-4 text-sm text-zinc-400 font-mono text-right">{e.duration}h</td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusStyles(e.status)}`}>
-                                                            {e.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <td className="px-4 py-4 text-sm text-zinc-400 font-mono whitespace-nowrap">{e.date}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-300">{e.day}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400">{e.inTime}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400">{e.outTime}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400 font-mono">{e.charges}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.expenses}>{e.expenses}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400 font-mono">{e.kilometres}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400">{e.location}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400">{e.petrol}</td>
+                                                    <td className="px-4 py-4 text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                onClick={() => setViewingEntry(e)}
+                                                                className="p-1.5 rounded-md text-zinc-500 hover:text-teal-400 hover:bg-teal-500/10 transition-colors"
+                                                                title="View Details"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                            </button>
                                                             <button
                                                                 onClick={() => handleEdit(e)}
                                                                 className="p-1.5 rounded-md text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"

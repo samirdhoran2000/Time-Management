@@ -41,7 +41,8 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                             value={formData.day}
                             onChange={onChange}
                             placeholder="Day"
-                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                            disabled
+                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors cursor-not-allowed"
                         />
                         <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
                             Day
@@ -110,19 +111,45 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                         </label>
                     </div>
 
-                    {/* 8. Location (Moved up as it's default) */}
-                    <div className="relative">
+                    {/* 8. Location */}
+                    <div className="relative group sm:col-span-2">
                         <input
                             type="text"
                             name="location"
                             value={formData.location}
                             onChange={onChange}
-                            placeholder="City"
+                            placeholder="Location"
                             className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
                         />
                         <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
                             Location
                         </label>
+
+                        {/* Quick Add Presets */}
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {['F8', 'Office', 'Local'].map(preset => (
+                                <button
+                                    key={preset}
+                                    type="button"
+                                    onClick={() => {
+                                        const currentVal = formData.location || '';
+                                        const trimmed = currentVal.trim();
+                                        const newVal = trimmed ? `${trimmed}, ${preset}` : preset;
+                                        onChange({ target: { name: 'location', value: newVal } });
+                                    }}
+                                    className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-indigo-500/10 hover:text-indigo-400 hover:border-indigo-500/30 transition-all active:scale-95"
+                                >
+                                    + {preset}
+                                </button>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => onChange({ target: { name: 'location', value: '' } })}
+                                className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-zinc-900/50 text-zinc-600 border border-zinc-800/50 hover:text-red-400/70 transition-all"
+                            >
+                                Clear
+                            </button>
+                        </div>
                     </div>
                 </div>
 

@@ -1,0 +1,175 @@
+import React from 'react';
+
+const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCancel }) => {
+    return (
+        <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/50 shrink-0">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-5">
+                <span className="w-1 h-5 bg-indigo-500 rounded-full"></span>
+                {editingId !== null ? 'Edit Entry' : 'New Entry'}
+            </h3>
+
+            <form onSubmit={onSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+                    {/* 1. Date */}
+                    <div className="relative">
+                        <input
+                            type="date"
+                            name="date"
+                            value={formData.date}
+                            onChange={onChange}
+                            required
+                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white focus:ring-0 focus:border-indigo-500 transition-colors [color-scheme:dark]"
+                        />
+                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500">Date</label>
+                    </div>
+
+                    {/* 2. Day */}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            name="day"
+                            value={formData.day}
+                            onChange={onChange}
+                            placeholder="Day"
+                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                        />
+                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                            Day
+                        </label>
+                    </div>
+
+                    {/* 3. In Time */}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            name="inTime"
+                            value={formData.inTime}
+                            onChange={onChange}
+                            placeholder="12:00 PM"
+                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                        />
+                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                            In Time
+                        </label>
+                    </div>
+
+                    {/* 4. Out Time */}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            name="outTime"
+                            value={formData.outTime}
+                            onChange={onChange}
+                            placeholder="06:00 PM"
+                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                        />
+                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                            Out Time
+                        </label>
+                    </div>
+
+                    {/* 5. Charges */}
+                    <div className="relative">
+                        <input
+                            type="number"
+                            step="any"
+                            name="charges"
+                            value={formData.charges}
+                            onChange={onChange}
+                            placeholder="909.09"
+                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                        />
+                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                            Charges
+                        </label>
+                    </div>
+
+                    {/* 6. Expenses */}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            name="expenses"
+                            value={formData.expenses}
+                            onChange={onChange}
+                            placeholder="0"
+                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                        />
+                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                            Expenses
+                        </label>
+                    </div>
+
+                    {/* 7. Kilometres */}
+                    <div className="relative">
+                        <input
+                            type="number"
+                            step="any"
+                            name="kilometres"
+                            value={formData.kilometres}
+                            onChange={onChange}
+                            placeholder="0"
+                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                        />
+                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                            Kilometres
+                        </label>
+                    </div>
+
+                    {/* 8. Location */}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            name="location"
+                            value={formData.location}
+                            onChange={onChange}
+                            placeholder="City"
+                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                        />
+                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                            Location
+                        </label>
+                    </div>
+
+                    {/* 9. Petrol */}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            name="petrol"
+                            value={formData.petrol}
+                            onChange={onChange}
+                            placeholder="no"
+                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                        />
+                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                            Petrol
+                        </label>
+                    </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3 pt-4">
+                    {editingId !== null && (
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            className="w-1/3 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 py-3.5 rounded-xl font-bold transition-all"
+                        >
+                            Cancel
+                        </button>
+                    )}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 bg-white text-black hover:bg-zinc-200 py-3.5 rounded-xl font-bold shadow-lg shadow-white/5 transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                    >
+                        {loading ? 'Saving...' : (editingId !== null ? 'Update Entry' : 'Add Entry')}
+                        {!loading && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>}
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+};
+
+export default TrackerForm;

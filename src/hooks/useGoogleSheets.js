@@ -28,6 +28,16 @@ export const useGoogleSheets = () => {
         if (storedSheetId) {
             setSpreadsheetId(storedSheetId);
         }
+        const storedSheetName = localStorage.getItem('time_mgmt_sheet_name');
+        if (storedSheetName) {
+            setSheetName(storedSheetName);
+        }
+        const storedAllSheets = localStorage.getItem('time_mgmt_all_sheets');
+        if (storedAllSheets) {
+            try {
+                setAllSheets(JSON.parse(storedAllSheets));
+            } catch (err) { }
+        }
     }, []);
 
     // Save credentials to state and local storage
@@ -36,10 +46,21 @@ export const useGoogleSheets = () => {
         localStorage.setItem('time_mgmt_creds', JSON.stringify(json));
     };
 
-    // Save Spreadsheet ID
     const updateSpreadsheetId = (id) => {
         setSpreadsheetId(id);
         localStorage.setItem('time_mgmt_sheet_id', id);
+    };
+
+    // Save Sheet Name
+    const updateSheetName = (name) => {
+        setSheetName(name);
+        localStorage.setItem('time_mgmt_sheet_name', name);
+
+        // Also update GID for deletions when switching
+        const sheet = allSheets.find(s => s.title === name);
+        if (sheet) {
+            localStorage.setItem('time_mgmt_sheet_gid', sheet.sheetId);
+        }
     };
 
     // Clear everything
@@ -91,20 +112,27 @@ export const useGoogleSheets = () => {
             setAccessToken(tokenData.access_token);
 
             // Fetch Sheet Details (Name and GID)
-            // We assume we are working with the first sheet
-            const metadataRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties&key=${tokenData.access_token}`);
+            const metadataRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(title,sheetId)`, {
+                headers: { Authorization: `Bearer ${tokenData.access_token}` }
+            });
             if (metadataRes.ok) {
                 const metadata = await metadataRes.json();
                 const sheets = metadata.sheets.map(s => s.properties);
                 setAllSheets(sheets);
+                localStorage.setItem('time_mgmt_all_sheets', JSON.stringify(sheets));
 
-                // If current sheetName isn't in the list, default to first
-                const exists = sheets.find(s => s.title === sheetName);
-                if (!exists && sheets.length > 0) {
+                // Prefer persisted sheetName, or current state, or default to first
+                const targetName = localStorage.getItem('time_mgmt_sheet_name') || sheetName;
+                const exists = sheets.find(s => s.title === targetName);
+
+                if (exists) {
+                    setSheetName(exists.title);
+                    localStorage.setItem('time_mgmt_sheet_gid', exists.sheetId);
+                    localStorage.setItem('time_mgmt_sheet_name', exists.title);
+                } else if (sheets.length > 0) {
                     setSheetName(sheets[0].title);
                     localStorage.setItem('time_mgmt_sheet_gid', sheets[0].sheetId);
-                } else if (exists) {
-                    localStorage.setItem('time_mgmt_sheet_gid', exists.sheetId);
+                    localStorage.setItem('time_mgmt_sheet_name', sheets[0].title);
                 }
             }
 
@@ -290,8 +318,11 @@ export const useGoogleSheets = () => {
 
             // 3. Update State
             setSheetName(name);
-            setAllSheets(prev => [...prev, newSheetProps]);
+            const updatedSheets = [...allSheets, newSheetProps];
+            setAllSheets(updatedSheets);
+            localStorage.setItem('time_mgmt_all_sheets', JSON.stringify(updatedSheets));
             localStorage.setItem('time_mgmt_sheet_gid', newSheetProps.sheetId);
+            localStorage.setItem('time_mgmt_sheet_name', name);
 
             return createResult;
         } catch (err) {
@@ -313,7 +344,7 @@ export const useGoogleSheets = () => {
         error,
 
         // Setters
-        setSheetName,
+        setSheetName: updateSheetName,
         updateSpreadsheetId,
 
         // Actions

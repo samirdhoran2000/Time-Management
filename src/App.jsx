@@ -1,12 +1,10 @@
-import { useState } from 'react'
-import './App.css'
-import Home from './components/Home'
+import TimeTracker from './components/TimeTracker'
 
 function App() {
 
   return (
     <>
-      <Home/>
+      <TimeTracker />
     </>
   )
 }

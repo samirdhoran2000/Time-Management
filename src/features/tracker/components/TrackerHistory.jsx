@@ -2,7 +2,7 @@ import React from 'react';
 
 const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRefresh }) => {
     return (
-        <div className="lg:col-span-8 flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden">
             <div className="flex items-center justify-between mb-4 shrink-0">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                     History

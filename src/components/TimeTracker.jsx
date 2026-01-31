@@ -8,6 +8,7 @@ import SheetConnect from '../features/tracker/components/SheetConnect';
 import TrackerForm from '../features/tracker/components/TrackerForm';
 import TrackerHistory from '../features/tracker/components/TrackerHistory';
 import EntryDetailModal from '../features/tracker/components/EntryDetailModal';
+import TrackerStats from '../features/tracker/components/TrackerStats';
 
 const TimeTracker = () => {
     const {
@@ -264,15 +265,19 @@ const TimeTracker = () => {
                         />
                     </div>
 
-                    {/* Right Panel: List */}
-                    <TrackerHistory
-                        entries={entries}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onView={setViewingEntry}
-                        isRefreshing={isRefreshing}
-                        onRefresh={loadData}
-                    />
+                    {/* Right Panel: List & Stats */}
+                    <div className="lg:col-span-8 flex flex-col h-full overflow-hidden">
+                        <TrackerStats entries={entries} />
+
+                        <TrackerHistory
+                            entries={entries}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            onView={setViewingEntry}
+                            isRefreshing={isRefreshing}
+                            onRefresh={loadData}
+                        />
+                    </div>
                 </div>
             </main>
         </div>

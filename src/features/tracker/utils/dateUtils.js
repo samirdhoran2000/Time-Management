@@ -42,3 +42,44 @@ export const getDayName = (isoDate) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[dateObj.getDay()];
 };
+
+export const calculateDuration = (inTime, outTime) => {
+    if (!inTime || !outTime) return 0;
+
+    const parseTime = (timeStr) => {
+        if (!timeStr) return 0;
+        const match = timeStr.match(/(\d+):?(\d+)?\s*(AM|PM)?/i);
+        if (!match) return 0;
+
+        let hours = parseInt(match[1], 10);
+        let minutes = match[2] ? parseInt(match[2], 10) : 0;
+        const modifier = match[3] ? match[3].toUpperCase() : null;
+
+        if (modifier === 'PM' && hours < 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+
+        return hours * 60 + minutes;
+    };
+
+    try {
+        const inMinutes = parseTime(inTime);
+        const outMinutes = parseTime(outTime);
+
+        let diff = outMinutes - inMinutes;
+        // Handle overnight shifts
+        if (diff < 0) diff += 24 * 60;
+
+        return diff;
+    } catch (e) {
+        return 0;
+    }
+};
+
+export const formatMinutes = (totalMinutes) => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours === 0 && minutes === 0) return '0h';
+    if (hours === 0) return `${minutes}m`;
+    if (minutes === 0) return `${hours}h`;
+    return `${hours}h ${minutes}m`;
+};

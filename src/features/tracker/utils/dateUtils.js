@@ -35,3 +35,10 @@ export const parseDateFromSheet = (sheetDate) => {
 
     return sheetDate;
 };
+
+export const getDayName = (isoDate) => {
+    if (!isoDate) return '';
+    const dateObj = new Date(isoDate);
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[dateObj.getDay()];
+};

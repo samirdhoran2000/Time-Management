@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGoogleSheets } from '../hooks/useGoogleSheets';
-import { getTodayLocal, formatDateForSheet, parseDateFromSheet } from '../features/tracker/utils/dateUtils';
+import { getTodayLocal, formatDateForSheet, parseDateFromSheet, getDayName } from '../features/tracker/utils/dateUtils';
 
 // Modular Components
 import CredentialsUpload from '../features/tracker/components/CredentialsUpload';
@@ -32,7 +32,7 @@ const TimeTracker = () => {
     // Form State (Internal is yyyy-mm-dd for inputs, etc)
     const [formData, setFormData] = useState({
         date: getTodayLocal(),
-        day: '',
+        day: getDayName(getTodayLocal()),
         inTime: '12:00 PM', // Default per requirement
         outTime: '',
         charges: '909.0900909', // Default per requirement
@@ -66,10 +66,7 @@ const TimeTracker = () => {
     // 3. Update 'Day' when 'Date' changes
     useEffect(() => {
         if (formData.date) {
-            const dateObj = new Date(formData.date);
-            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const dayName = days[dateObj.getDay()];
-            setFormData(prev => ({ ...prev, day: dayName }));
+            setFormData(prev => ({ ...prev, day: getDayName(formData.date) }));
         }
     }, [formData.date]);
 
@@ -104,9 +101,10 @@ const TimeTracker = () => {
     };
 
     const resetForm = () => {
+        const today = getTodayLocal();
         setFormData({
-            date: getTodayLocal(),
-            day: '', // Will update via useEffect
+            date: today,
+            day: getDayName(today),
             inTime: '12:00 PM',
             outTime: '',
             charges: '909.0900909',

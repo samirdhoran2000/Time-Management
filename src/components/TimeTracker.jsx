@@ -92,7 +92,7 @@ const TimeTracker = () => {
                 location: r[7] || '',
                 petrol: r[8] || ''
             }));
-            setEntries(mapped);
+            setEntries(mapped.reverse());
         }
         setIsRefreshing(false);
     };

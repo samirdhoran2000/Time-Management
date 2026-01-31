@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCancel }) => {
+    const [showExtras, setShowExtras] = useState(false);
+
+    // Auto-expand if Expenses or Petrol has data (e.g. on Edit)
+    useEffect(() => {
+        if (formData.expenses || formData.petrolAmount || formData.petrolLitres) {
+            setShowExtras(true);
+        }
+    }, [formData.expenses, formData.petrolAmount, formData.petrolLitres, editingId]);
+
     return (
         <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800/50 shrink-0">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-5">
@@ -85,22 +94,7 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                         </label>
                     </div>
 
-                    {/* 6. Expenses */}
-                    <div className="relative">
-                        <input
-                            type="text"
-                            name="expenses"
-                            value={formData.expenses}
-                            onChange={onChange}
-                            placeholder="0"
-                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                        />
-                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                            Expenses
-                        </label>
-                    </div>
-
-                    {/* 7. Kilometres */}
+                    {/* 7. Kilometres (Moved up as it's default) */}
                     <div className="relative">
                         <input
                             type="number"
@@ -116,7 +110,7 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                         </label>
                     </div>
 
-                    {/* 8. Location */}
+                    {/* 8. Location (Moved up as it's default) */}
                     <div className="relative">
                         <input
                             type="text"
@@ -130,43 +124,85 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                             Location
                         </label>
                     </div>
+                </div>
 
-                    {/* 9. Petrol Group */}
-                    {/* 9. Petrol Group */}
-                    <div className="flex items-end gap-3">
-                        <div className="relative flex-1">
+                {/* Extras Toggle */}
+                <div>
+                    {!showExtras ? (
+                        <button
+                            type="button"
+                            onClick={() => setShowExtras(true)}
+                            className="text-xs font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                            Add Expenses & Fuel
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => setShowExtras(false)}
+                            className="text-xs font-medium text-zinc-500 hover:text-zinc-400 flex items-center gap-1 mb-4 transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" /></svg>
+                            Hide Extras
+                        </button>
+                    )}
+                </div>
+
+                {/* Extras Section */}
+                {showExtras && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 animate-in slide-in-from-top-2 fade-in duration-300">
+                        {/* 6. Expenses */}
+                        <div className="relative">
                             <input
-                                type="number"
-                                name="petrolAmount"
-                                value={formData.petrolAmount || ''}
+                                type="text"
+                                name="expenses"
+                                value={formData.expenses}
                                 onChange={onChange}
-                                step="any"
-                                placeholder="Amount"
+                                placeholder="0"
                                 className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
                             />
-                            <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 pointer-events-none transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                                Petrol (₹)
+                            <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                Expenses
                             </label>
                         </div>
 
-                        <div className="pb-3 text-zinc-600 font-light">/</div>
+                        {/* 9. Petrol Group */}
+                        <div className="flex items-end gap-3">
+                            <div className="relative flex-1">
+                                <input
+                                    type="number"
+                                    name="petrolAmount"
+                                    value={formData.petrolAmount || ''}
+                                    onChange={onChange}
+                                    step="any"
+                                    placeholder="Amount"
+                                    className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                                />
+                                <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 pointer-events-none transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                    Petrol (₹)
+                                </label>
+                            </div>
 
-                        <div className="relative flex-1">
-                            <input
-                                type="number"
-                                name="petrolLitres"
-                                value={formData.petrolLitres || ''}
-                                onChange={onChange}
-                                step="any"
-                                placeholder="Litres"
-                                className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                            />
-                            <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 pointer-events-none transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                                Litres (L)
-                            </label>
+                            <div className="pb-3 text-zinc-600 font-light">/</div>
+
+                            <div className="relative flex-1">
+                                <input
+                                    type="number"
+                                    name="petrolLitres"
+                                    value={formData.petrolLitres || ''}
+                                    onChange={onChange}
+                                    step="any"
+                                    placeholder="Litres"
+                                    className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
+                                />
+                                <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 pointer-events-none transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
+                                    Litres (L)
+                                </label>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Buttons */}
                 <div className="flex gap-3 pt-4">

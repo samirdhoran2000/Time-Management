@@ -67,9 +67,11 @@ export const useGoogleSheets = () => {
     const logout = () => {
         setCredentials(null);
         setAccessToken(null);
-        localStorage.removeItem('time_mgmt_creds');
+        // localStorage.removeItem('time_mgmt_creds');
         // We might want to keep the spreadsheet ID? For now, let's keep it.
-        // localStorage.removeItem('time_mgmt_sheet_id'); 
+        // localStorage.removeItem('time_mgmt_sheet_id');
+
+        localStorage.clear();
     };
 
     // Authenticate

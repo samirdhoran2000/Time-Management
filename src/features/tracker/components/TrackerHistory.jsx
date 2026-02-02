@@ -46,7 +46,7 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRef
                                 </tr>
                             ) : (
                                 entries.map((e) => (
-                                    <tr key={e.id} className="group hover:bg-zinc-800/50 transition-colors">
+                                    <tr key={e.id} className="group hover:bg-zinc-800/50 even:bg-zinc-800/30 transition-colors">
                                         <td className="px-4 py-4 text-sm text-zinc-400 font-mono whitespace-nowrap">{e.date}</td>
                                         <td className="px-4 py-4 text-sm text-zinc-300">{e.day}</td>
                                         <td className="px-4 py-4 text-sm text-zinc-400">{e.inTime}</td>

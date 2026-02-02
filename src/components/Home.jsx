@@ -161,7 +161,7 @@ const Home = () => {
                 </thead>
                 <tbody>
                     {data.map((row, i) => (
-                        <tr key={i}>
+                        <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#18181b' : 'transparent' }}>
                             {Object.keys(row).filter(k => k !== 'id').map((k, index) => <td key={index} style={{ padding: '8px' }}>{row[k]}</td>)}
                         </tr>
                     ))}

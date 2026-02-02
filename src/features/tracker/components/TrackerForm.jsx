@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCancel }) => {
+const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCancel, minDate, maxDate }) => {
     const [showExtras, setShowExtras] = useState(false);
 
     // Auto-expand if Expenses or Petrol has data (e.g. on Edit)
@@ -27,6 +27,8 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                             name="date"
                             value={formData.date}
                             onChange={onChange}
+                            min={minDate}
+                            max={maxDate}
                             required
                             className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white focus:ring-0 focus:border-indigo-500 transition-colors [color-scheme:dark]"
                         />
@@ -127,14 +129,14 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
 
                         {/* Quick Add Presets */}
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {['F8', 'Office', 'Local'].map(preset => (
+                            {['F8', 'Office', 'Local', 'D-Mart', 'Pune Station'].map(preset => (
                                 <button
                                     key={preset}
                                     type="button"
                                     onClick={() => {
                                         const currentVal = formData.location || '';
                                         const trimmed = currentVal.trim();
-                                        const newVal = trimmed ? `${trimmed}, ${preset}` : preset;
+                                        const newVal = trimmed ? `${trimmed} + ${preset}` : preset;
                                         onChange({ target: { name: 'location', value: newVal } });
                                     }}
                                     className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-indigo-500/10 hover:text-indigo-400 hover:border-indigo-500/30 transition-all active:scale-95"

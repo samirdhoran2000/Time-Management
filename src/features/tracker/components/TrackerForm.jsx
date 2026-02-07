@@ -42,6 +42,7 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                     <FormField
                         label="In Time"
                         name="inTime"
+                        type="time"
                         value={formData.inTime}
                         onChange={onChange}
                         placeholder="12:00 PM"
@@ -50,6 +51,7 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                     <FormField
                         label="Out Time"
                         name="outTime"
+                        type="time"
                         value={formData.outTime}
                         onChange={onChange}
                         placeholder="06:00 PM"

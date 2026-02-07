@@ -258,19 +258,19 @@ const TimeTracker = () => {
             {/* Top Navigation */}
             <nav className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md shrink-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
                             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </div>
-                        <span className="font-semibold text-white tracking-tight">TimeTracker</span>
+                        <span className="font-semibold text-white tracking-tight hidden sm:block">TimeTracker</span>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
                             <select
                                 value={sheetName}
                                 onChange={(e) => setSheetName(e.target.value)}
-                                className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs font-medium text-zinc-300 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer"
+                                className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 sm:px-3 text-[10px] sm:text-xs font-medium text-zinc-300 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer max-w-[100px] sm:max-w-none"
                             >
                                 {allSheets.map(s => (
                                     <option key={s.sheetId} value={s.title}>{s.title}</option>
@@ -278,13 +278,13 @@ const TimeTracker = () => {
                             </select>
                             <button
                                 onClick={handleAddSheet}
-                                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-indigo-400 hover:border-indigo-500/50 transition-all shadow-sm"
+                                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-indigo-400 hover:border-indigo-500/50 transition-all shadow-sm shrink-0"
                                 title="Add New Sheet"
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                             </button>
                         </div>
-                        <button onClick={logout} className="text-sm font-medium text-zinc-500 hover:text-white transition-colors">
+                        <button onClick={logout} className="text-[10px] sm:text-sm font-medium text-zinc-500 hover:text-white transition-colors shrink-0">
                             Disconnect
                         </button>
                     </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRefresh }) => {
     return (
@@ -55,7 +55,7 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRef
                                         <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.expenses}>{e.expenses}</td>
                                         <td className="px-4 py-4 text-sm text-zinc-400 font-mono">{e.kilometres}</td>
                                         <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.location}>{e.location}</td>
-                                        <td className="px-4 py-4 text-sm text-zinc-400">{e.petrol}</td>
+                                        <td className="px-4 py-4 text-sm text-zinc-400 capitalize max-w-[130px] truncate">{e.petrol}</td>
                                         <td className="px-4 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button

@@ -47,7 +47,7 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRef
                                 entries.map((e) => {
                                     const isRowWarning = !e.inTime || !e.outTime || Number(e.charges) === 0;
                                     return (
-                                        <tr key={e.id} className={`group transition-colors ${isRowWarning ? 'bg-red-500/10 hover:bg-red-500/20 text-red-100' : 'hover:bg-zinc-800/50 even:bg-zinc-800/30'}`}>
+                                        <tr key={e.id} className={`group transition-colors ${isRowWarning ? 'bg-red-500/10 hover:bg-red-500/20 text-red-100' : 'hover:bg-zinc-800/90 even:bg-zinc-800/30'}`}>
                                             <td className={`px-4 py-4 text-sm font-mono whitespace-nowrap ${isRowWarning ? 'text-red-400' : 'text-zinc-400'}`}>{e.date}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-300">{e.day}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-400">{e.inTime}</td>

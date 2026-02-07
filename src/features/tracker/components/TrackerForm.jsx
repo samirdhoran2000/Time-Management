@@ -105,6 +105,21 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                             ))}
                             <button
                                 type="button"
+                                onClick={() => {
+                                    const custom = prompt('Enter custom location:');
+                                    if (custom && custom.trim()) {
+                                        const currentVal = formData.location || '';
+                                        const trimmed = currentVal.trim();
+                                        const newVal = trimmed ? `${trimmed} + ${custom.trim()}` : custom.trim();
+                                        onChange({ target: { name: 'location', value: newVal } });
+                                    }
+                                }}
+                                className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500 hover:text-white transition-all active:scale-95"
+                            >
+                                Custom
+                            </button>
+                            <button
+                                type="button"
                                 onClick={() => onChange({ target: { name: 'location', value: '' } })}
                                 className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-zinc-900/50 text-zinc-600 border border-zinc-800/50 hover:text-red-400/70 transition-all"
                             >

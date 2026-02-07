@@ -53,7 +53,7 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRef
                                             <td className="px-4 py-4 text-sm text-zinc-400">{e.inTime}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-400">{e.outTime}</td>
                                             <td className={`px-4 py-4 text-sm font-mono ${isRowWarning ? 'text-red-400' : 'text-zinc-400'}`}>{e.charges}</td>
-                                            <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.expenses}>{e.expenses}</td>
+                                            <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.expenses || 'N/A'}>{e.expenses || 'N/A'}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-400 font-mono">{e.kilometres}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.location}>{e.location}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-400 capitalize max-w-[130px] truncate">{e.petrol}</td>

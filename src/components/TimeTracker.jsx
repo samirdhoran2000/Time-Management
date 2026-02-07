@@ -77,6 +77,14 @@ const TimeTracker = () => {
         }
     }, [formData.date]);
 
+    // 4. Clear state on disconnect
+    useEffect(() => {
+        if (!accessToken || !spreadsheetId) {
+            setEntries([]);
+            setEditingId(null);
+        }
+    }, [accessToken, spreadsheetId]);
+
 
     // --- Actions ---
 

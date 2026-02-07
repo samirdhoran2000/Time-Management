@@ -89,11 +89,13 @@ export const useGoogleSheets = () => {
 
         try {
             const token = await getAccessToken(credentials);
-            setAccessToken(token);
 
-            // Fetch Sheet Details (Name and GID)
+            // Fetch Sheet Details (Name and GID) - THIS VALIDATES THE SPREADSHEET ID
             const metadata = await sheetsService.fetchSpreadsheetMetadata(spreadsheetId, token);
             const sheets = metadata.sheets.map(s => s.properties);
+
+            // If we are here, everything is valid
+            setAccessToken(token);
             setAllSheets(sheets);
             localStorage.setItem(LOCAL_STORAGE_KEYS.ALL_SHEETS, JSON.stringify(sheets));
 
@@ -112,8 +114,12 @@ export const useGoogleSheets = () => {
             }
 
         } catch (err) {
-            console.error(err);
-            setError(err.message);
+            console.error("Connection failed:", err);
+            setAccessToken(null); // Reset access token if validation fails
+            setAllSheets([]); // Clear sheets on error
+            setError(err.message === "Unexpected token '<', \"<!DOCTYPE h\"... is not valid JSON"
+                ? "Invalid Spreadsheet ID or no permission"
+                : err.message);
         } finally {
             setLoading(false);
         }

@@ -178,7 +178,7 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                 )}
 
                 {/* Buttons */}
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-4 pb-4">
                     {editingId !== null && (
                         <button
                             type="button"

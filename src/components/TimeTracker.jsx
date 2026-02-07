@@ -319,6 +319,7 @@ const TimeTracker = () => {
                         className={`
                             fixed inset-0 z-[55] bg-zinc-950/95 backdrop-blur-sm lg:relative lg:inset-auto lg:z-auto lg:bg-transparent lg:backdrop-blur-none
                             lg:col-span-4 flex flex-col gap-6 lg:overflow-y-auto lg:pr-2 no-scrollbar scroll-mt-20 p-6 lg:p-0
+                            overflow-y-auto h-[100dvh] lg:h-auto pb-20 lg:pb-0
                             transition-all duration-300 ease-in-out
                             ${isFormOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 lg:translate-y-0 lg:opacity-100'}
                         `}

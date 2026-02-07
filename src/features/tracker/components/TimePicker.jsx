@@ -66,7 +66,10 @@ const TimePicker = ({ value, onChange, label, disabled = false }) => {
             </button>
 
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => setIsOpen(false)}
+                >
                     <div
                         onClick={(e) => e.stopPropagation()}
                         className="w-full max-w-[280px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 duration-200"

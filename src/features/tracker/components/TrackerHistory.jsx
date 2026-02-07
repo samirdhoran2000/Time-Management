@@ -1,5 +1,4 @@
 
-
 const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRefresh }) => {
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -45,44 +44,47 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRef
                                     </td>
                                 </tr>
                             ) : (
-                                entries.map((e) => (
-                                    <tr key={e.id} className="group hover:bg-zinc-800/50 even:bg-zinc-800/30 transition-colors">
-                                        <td className="px-4 py-4 text-sm text-zinc-400 font-mono whitespace-nowrap">{e.date}</td>
-                                        <td className="px-4 py-4 text-sm text-zinc-300">{e.day}</td>
-                                        <td className="px-4 py-4 text-sm text-zinc-400">{e.inTime}</td>
-                                        <td className="px-4 py-4 text-sm text-zinc-400">{e.outTime}</td>
-                                        <td className="px-4 py-4 text-sm text-zinc-400 font-mono">{e.charges}</td>
-                                        <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.expenses}>{e.expenses}</td>
-                                        <td className="px-4 py-4 text-sm text-zinc-400 font-mono">{e.kilometres}</td>
-                                        <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.location}>{e.location}</td>
-                                        <td className="px-4 py-4 text-sm text-zinc-400 capitalize max-w-[130px] truncate">{e.petrol}</td>
-                                        <td className="px-4 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => onView(e)}
-                                                    className="p-1.5 rounded-md text-zinc-500 hover:text-teal-400 hover:bg-teal-500/10 transition-colors"
-                                                    title="View Details"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                                </button>
-                                                <button
-                                                    onClick={() => onEdit(e)}
-                                                    className="p-1.5 rounded-md text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
-                                                    title="Edit"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                                </button>
-                                                <button
-                                                    onClick={() => onDelete(e.id)}
-                                                    className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+                                entries.map((e) => {
+                                    const isRowWarning = !e.inTime || !e.outTime || Number(e.charges) === 0;
+                                    return (
+                                        <tr key={e.id} className={`group transition-colors ${isRowWarning ? 'bg-red-500/10 hover:bg-red-500/20 text-red-100' : 'hover:bg-zinc-800/50 even:bg-zinc-800/30'}`}>
+                                            <td className={`px-4 py-4 text-sm font-mono whitespace-nowrap ${isRowWarning ? 'text-red-400' : 'text-zinc-400'}`}>{e.date}</td>
+                                            <td className="px-4 py-4 text-sm text-zinc-300">{e.day}</td>
+                                            <td className="px-4 py-4 text-sm text-zinc-400">{e.inTime}</td>
+                                            <td className="px-4 py-4 text-sm text-zinc-400">{e.outTime}</td>
+                                            <td className={`px-4 py-4 text-sm font-mono ${isRowWarning ? 'text-red-400' : 'text-zinc-400'}`}>{e.charges}</td>
+                                            <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.expenses}>{e.expenses}</td>
+                                            <td className="px-4 py-4 text-sm text-zinc-400 font-mono">{e.kilometres}</td>
+                                            <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.location}>{e.location}</td>
+                                            <td className="px-4 py-4 text-sm text-zinc-400 capitalize max-w-[130px] truncate">{e.petrol}</td>
+                                            <td className="px-4 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => onView(e)}
+                                                        className="p-1.5 rounded-md text-zinc-500 hover:text-teal-400 hover:bg-teal-500/10 transition-colors"
+                                                        title="View Details"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => onEdit(e)}
+                                                        className="p-1.5 rounded-md text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => onDelete(e.id)}
+                                                        className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

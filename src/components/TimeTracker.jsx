@@ -51,6 +51,7 @@ const TimeTracker = () => {
     const [viewingEntry, setViewingEntry] = useState(null); // Entry being viewed
     const [entries, setEntries] = useState([]);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(false); // Mobile form visibility
     const formRef = React.useRef(null);
 
     // --- Effects ---
@@ -121,6 +122,7 @@ const TimeTracker = () => {
             petrolLitres: ''
         });
         setEditingId(null);
+        setIsFormOpen(false); // Close on cancel/reset
     };
 
     const handleSubmit = async (e) => {
@@ -155,6 +157,7 @@ const TimeTracker = () => {
             }
 
             resetForm();
+            setIsFormOpen(false); // Close after successful save
             loadData();
         } catch (err) {
             alert("Error saving: " + err.message);
@@ -187,6 +190,8 @@ const TimeTracker = () => {
             petrolAmount: pAmount,
             petrolLitres: pLitres
         });
+
+        setIsFormOpen(true); // Open form on edit
 
         // Scroll to form on mobile
         if (window.innerWidth < 1024 && formRef.current) {
@@ -286,10 +291,30 @@ const TimeTracker = () => {
                     onClose={() => setViewingEntry(null)}
                 />
 
+                {/* Floating Action Button (Mobile Only) */}
+                <button
+                    onClick={() => setIsFormOpen(!isFormOpen)}
+                    className="lg:hidden fixed bottom-8 right-6 z-[60] w-14 h-14 rounded-full bg-indigo-600 text-white shadow-2xl shadow-indigo-500/40 flex items-center justify-center transition-all active:scale-95 hover:bg-indigo-500"
+                >
+                    {isFormOpen ? (
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    ) : (
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                    )}
+                </button>
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-full">
 
                     {/* Left Panel: Input Form */}
-                    <div ref={formRef} className="lg:col-span-4 flex flex-col gap-6 lg:overflow-y-auto lg:pr-2 no-scrollbar scroll-mt-20">
+                    <div
+                        ref={formRef}
+                        className={`
+                            fixed inset-0 z-[55] bg-zinc-950/95 backdrop-blur-sm lg:relative lg:inset-auto lg:z-auto lg:bg-transparent lg:backdrop-blur-none
+                            lg:col-span-4 flex flex-col gap-6 lg:overflow-y-auto lg:pr-2 no-scrollbar scroll-mt-20 p-6 lg:p-0
+                            transition-all duration-300 ease-in-out
+                            ${isFormOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 lg:translate-y-0 lg:opacity-100'}
+                        `}
+                    >
                         <TrackerForm
                             formData={formData}
                             onChange={handleInputChange}

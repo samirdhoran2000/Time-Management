@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import FormField from './FormField';
 
 const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCancel, minDate, maxDate }) => {
     const [showExtras, setShowExtras] = useState(false);
@@ -19,113 +20,69 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
 
             <form onSubmit={onSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <FormField
+                        label="Date"
+                        name="date"
+                        type="date"
+                        value={formData.date}
+                        onChange={onChange}
+                        min={minDate}
+                        max={maxDate}
+                        required
+                    />
 
-                    {/* 1. Date */}
-                    <div className="relative">
-                        <input
-                            type="date"
-                            name="date"
-                            value={formData.date}
-                            onChange={onChange}
-                            min={minDate}
-                            max={maxDate}
-                            required
-                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white focus:ring-0 focus:border-indigo-500 transition-colors [color-scheme:dark]"
-                        />
-                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500">Date</label>
-                    </div>
+                    <FormField
+                        label="Day"
+                        name="day"
+                        value={formData.day}
+                        onChange={onChange}
+                        disabled
+                    />
 
-                    {/* 2. Day */}
-                    <div className="relative">
-                        <input
-                            type="text"
-                            name="day"
-                            value={formData.day}
-                            onChange={onChange}
-                            placeholder="Day"
-                            disabled
-                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors cursor-not-allowed"
-                        />
-                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                            Day
-                        </label>
-                    </div>
+                    <FormField
+                        label="In Time"
+                        name="inTime"
+                        value={formData.inTime}
+                        onChange={onChange}
+                        placeholder="12:00 PM"
+                    />
 
-                    {/* 3. In Time */}
-                    <div className="relative">
-                        <input
-                            type="text"
-                            name="inTime"
-                            value={formData.inTime}
-                            onChange={onChange}
-                            placeholder="12:00 PM"
-                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                        />
-                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                            In Time
-                        </label>
-                    </div>
+                    <FormField
+                        label="Out Time"
+                        name="outTime"
+                        value={formData.outTime}
+                        onChange={onChange}
+                        placeholder="06:00 PM"
+                    />
 
-                    {/* 4. Out Time */}
-                    <div className="relative">
-                        <input
-                            type="text"
-                            name="outTime"
-                            value={formData.outTime}
-                            onChange={onChange}
-                            placeholder="06:00 PM"
-                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                        />
-                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                            Out Time
-                        </label>
-                    </div>
+                    <FormField
+                        label="Charges"
+                        name="charges"
+                        type="number"
+                        step="any"
+                        value={formData.charges}
+                        onChange={onChange}
+                        placeholder="909.09"
+                    />
 
-                    {/* 5. Charges */}
-                    <div className="relative">
-                        <input
-                            type="number"
-                            step="any"
-                            name="charges"
-                            value={formData.charges}
-                            onChange={onChange}
-                            placeholder="909.09"
-                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                        />
-                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                            Charges
-                        </label>
-                    </div>
+                    <FormField
+                        label="Kilometres"
+                        name="kilometres"
+                        type="number"
+                        step="any"
+                        value={formData.kilometres}
+                        onChange={onChange}
+                        placeholder="0"
+                    />
 
-                    {/* 7. Kilometres (Moved up as it's default) */}
-                    <div className="relative">
-                        <input
-                            type="number"
-                            step="any"
-                            name="kilometres"
-                            value={formData.kilometres}
-                            onChange={onChange}
-                            placeholder="0"
-                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                        />
-                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                            Kilometres
-                        </label>
-                    </div>
-
-                    {/* 8. Location */}
-                    <div className="relative group sm:col-span-2">
-                        <input
-                            type="text"
+                    <div className="relative group sm:col-span-2 space-y-2">
+                        <FormField
+                            label="Location"
                             name="location"
                             value={formData.location}
                             onChange={onChange}
                             placeholder="Location"
-                            className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
                         />
-                        <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                            Location
-                        </label>
 
                         {/* Quick Add Presets */}
                         <div className="flex flex-wrap gap-2 mt-2">
@@ -181,54 +138,39 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                 {/* Extras Section */}
                 {showExtras && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 animate-in slide-in-from-top-2 fade-in duration-300">
-                        {/* 6. Expenses */}
-                        <div className="relative">
-                            <input
-                                type="text"
-                                name="expenses"
-                                value={formData.expenses}
-                                onChange={onChange}
-                                placeholder="0"
-                                className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                            />
-                            <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                                Expenses
-                            </label>
-                        </div>
+                        <FormField
+                            label="Expenses"
+                            name="expenses"
+                            value={formData.expenses}
+                            onChange={onChange}
+                            placeholder="0"
+                        />
 
-                        {/* 9. Petrol Group */}
+                        {/* Petrol Group */}
                         <div className="flex items-end gap-3">
-                            <div className="relative flex-1">
-                                <input
-                                    type="number"
-                                    name="petrolAmount"
-                                    value={formData.petrolAmount || ''}
-                                    onChange={onChange}
-                                    step="any"
-                                    placeholder="Amount"
-                                    className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                                />
-                                <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 pointer-events-none transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                                    Petrol (₹)
-                                </label>
-                            </div>
+                            <FormField
+                                label="Petrol (₹)"
+                                name="petrolAmount"
+                                type="number"
+                                step="any"
+                                value={formData.petrolAmount || ''}
+                                onChange={onChange}
+                                placeholder="Amount"
+                                className="flex-1"
+                            />
 
                             <div className="pb-3 text-zinc-600 font-light">/</div>
 
-                            <div className="relative flex-1">
-                                <input
-                                    type="number"
-                                    name="petrolLitres"
-                                    value={formData.petrolLitres || ''}
-                                    onChange={onChange}
-                                    step="any"
-                                    placeholder="Litres"
-                                    className="peer w-full bg-transparent border-0 border-b border-zinc-700 px-0 py-2.5 text-white placeholder-transparent focus:ring-0 focus:border-indigo-500 transition-colors"
-                                />
-                                <label className="absolute left-0 -top-2.5 text-xs text-zinc-500 pointer-events-none transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-indigo-500">
-                                    Litres (L)
-                                </label>
-                            </div>
+                            <FormField
+                                label="Litres (L)"
+                                name="petrolLitres"
+                                type="number"
+                                step="any"
+                                value={formData.petrolLitres || ''}
+                                onChange={onChange}
+                                placeholder="Litres"
+                                className="flex-1"
+                            />
                         </div>
                     </div>
                 )}

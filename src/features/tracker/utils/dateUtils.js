@@ -83,3 +83,8 @@ export const formatMinutes = (totalMinutes) => {
     if (minutes === 0) return `${hours}h`;
     return `${hours}h ${minutes}m`;
 };
+
+export const ddmmyyyyToIso = (dateStr) => {
+    const [dd, mm, yyyy] = dateStr.split("-");
+    return `${yyyy}-${mm}-${dd}`;
+}

@@ -1,3 +1,4 @@
+import { ddmmyyyyToIso } from "../utils/dateUtils";
 
 const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRefresh }) => {
     return (
@@ -45,14 +46,30 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRef
                                 </tr>
                             ) : (
                                 entries.map((e) => {
-                                    const isRowWarning = !e.inTime || !e.outTime || Number(e.charges) === 0;
+
+
+                                    const today = new Date().toISOString().split("T")[0];
+                                    const rowDate = ddmmyyyyToIso(e.date);
+
+                                    const isToday = rowDate === today;
+                                    const isMissingData = !e.inTime || !e.outTime || Number(e.charges) === 0;
+
+                                    const isTodayWarning = isToday && isMissingData;
+                                    const isHistoryWarning = !isToday && isMissingData;
+
+
                                     return (
-                                        <tr key={e.id} className={`group transition-colors ${isRowWarning ? 'bg-red-500/10 hover:bg-red-500/20 text-red-100' : 'hover:bg-zinc-800/90 even:bg-zinc-800/30'}`}>
-                                            <td className={`px-4 py-4 text-sm font-mono whitespace-nowrap ${isRowWarning ? 'text-red-400' : 'text-zinc-400'}`}>{e.date}</td>
+                                        <tr key={e.id} className={`group transition-colors ${isTodayWarning
+                                                ? 'bg-red-500/10 hover:bg-red-500/20 text-red-100'
+                                                : isHistoryWarning
+                                                    ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-50'
+                                                    : 'hover:bg-zinc-800/90 even:bg-zinc-800/30'
+                                            }`}>
+                                            <td className={`px-4 py-4 text-sm font-mono whitespace-nowrap ${isTodayWarning ? 'text-red-400' : isHistoryWarning ? 'text-blue-400' : 'text-zinc-400'}`}>{e.date}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-300">{e.day}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-400">{e.inTime}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-400">{e.outTime}</td>
-                                            <td className={`px-4 py-4 text-sm font-mono ${isRowWarning ? 'text-red-400' : 'text-zinc-400'}`}>{e.charges}</td>
+                                            <td className={`px-4 py-4 text-sm font-mono ${isTodayWarning ? 'text-red-400' : isHistoryWarning ? 'text-blue-400' : 'text-zinc-400'}`}>{e.charges}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.expenses || 'N/A'}>{e.expenses || 'N/A'}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-400 font-mono">{e.kilometres}</td>
                                             <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.location}>{e.location}</td>

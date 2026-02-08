@@ -81,5 +81,36 @@ export const createSheet = async (spreadsheetId, accessToken, name) => {
         body: JSON.stringify({ values: [headers] })
     });
 
+    // Enforce Unique Dates validation in Column A
+    await addUniqueDateValidation(spreadsheetId, newSheetProps.sheetId, accessToken);
+
     return newSheetProps;
+};
+
+export const addUniqueDateValidation = async (spreadsheetId, sheetId, accessToken) => {
+    return request(`${spreadsheetId}:batchUpdate`, {
+        method: 'POST',
+        accessToken,
+        body: JSON.stringify({
+            requests: [{
+                setDataValidation: {
+                    range: {
+                        sheetId: parseInt(sheetId),
+                        startRowIndex: 1, // Start from Row 2 (index 1)
+                        startColumnIndex: 0, // Column A
+                        endColumnIndex: 1
+                    },
+                    rule: {
+                        condition: {
+                            type: 'CUSTOM_FORMULA',
+                            values: [{ userEnteredValue: '=COUNTIF($A:$A, A2)=1' }]
+                        },
+                        inputMessage: 'Date must be unique. An entry for this date already exists.',
+                        strict: true,
+                        showCustomUi: true
+                    }
+                }
+            }]
+        })
+    });
 };

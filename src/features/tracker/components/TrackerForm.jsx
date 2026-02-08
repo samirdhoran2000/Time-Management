@@ -88,7 +88,7 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
 
                         {/* Quick Add Presets */}
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {['F8', 'Office', 'Local', 'D-Mart', 'Pune Station'].map(preset => (
+                            {['F8', 'Office', 'Local', 'D-Mart', 'Pune Station', 'Gulmohar'].map(preset => (
                                 <button
                                     key={preset}
                                     type="button"

@@ -20,6 +20,7 @@ const FormField = ({
     step,
     className = '',
     fullWidth = false,
+    inputRef,
 }) => {
     const isSelect = type === 'select';
     const isTime = type === 'time';
@@ -75,6 +76,7 @@ const FormField = ({
                 max={max}
                 step={step}
                 className={`${baseInputClasses} ${disabledClasses} ${dateClasses}`}
+                ref={inputRef}
             />
         );
     };

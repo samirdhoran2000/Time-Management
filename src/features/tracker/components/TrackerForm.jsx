@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import FormField from './FormField';
 
 const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCancel, minDate, maxDate }) => {
     const [showExtras, setShowExtras] = useState(false);
+    const locationRef = useRef(null);
 
     // Auto-expand if Expenses or Petrol has data (e.g. on Edit)
     useEffect(() => {
@@ -84,6 +85,7 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                             value={formData.location}
                             onChange={onChange}
                             placeholder="Location"
+                            inputRef={locationRef}
                         />
 
                         {/* Quick Add Presets */}
@@ -97,6 +99,16 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                                         const trimmed = currentVal.trim();
                                         const newVal = trimmed ? `${trimmed} + ${preset}` : preset;
                                         onChange({ target: { name: 'location', value: newVal } });
+
+                                        // Focus and scroll to end
+                                        setTimeout(() => {
+                                            if (locationRef.current) {
+                                                locationRef.current.focus();
+                                                locationRef.current.scrollLeft = locationRef.current.scrollWidth;
+                                                const len = newVal.length;
+                                                locationRef.current.setSelectionRange(len, len);
+                                            }
+                                        }, 0);
                                     }}
                                     className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-indigo-500/10 hover:text-indigo-400 hover:border-indigo-500/30 transition-all active:scale-95"
                                 >
@@ -112,6 +124,16 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                                         const trimmed = currentVal.trim();
                                         const newVal = trimmed ? `${trimmed} + ${custom.trim()}` : custom.trim();
                                         onChange({ target: { name: 'location', value: newVal } });
+
+                                        // Focus and scroll to end
+                                        setTimeout(() => {
+                                            if (locationRef.current) {
+                                                locationRef.current.focus();
+                                                locationRef.current.scrollLeft = locationRef.current.scrollWidth;
+                                                const len = newVal.length;
+                                                locationRef.current.setSelectionRange(len, len);
+                                            }
+                                        }, 0);
                                     }
                                 }}
                                 className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500 hover:text-white transition-all active:scale-95"

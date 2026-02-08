@@ -85,8 +85,69 @@ const TimeTracker = () => {
         }
     }, [accessToken, spreadsheetId]);
 
+    // 5. Auto-fill form if date already has an entry
+    useEffect(() => {
+        if (!formData.date || entries.length === 0) return;
+
+        const formattedDate = formatDateForSheet(formData.date);
+        const existingEntry = entries.find(e => e.date === formattedDate);
+
+        if (existingEntry) {
+            // Only auto-fill if we aren't already editing THIS entry or if we just changed the date
+            if (editingId !== existingEntry.id) {
+                setFormData(mapEntryToForm(existingEntry));
+                setEditingId(existingEntry.id);
+            }
+        } else {
+            // If date has no entry but we were in Edit Mode, reset to defaults
+            if (editingId !== null) {
+                const currentDate = formData.date;
+                setFormData({
+                    date: currentDate,
+                    day: getDayName(currentDate),
+                    inTime: '12:00 PM',
+                    outTime: '',
+                    charges: '909.0900909',
+                    expenses: '',
+                    kilometres: '',
+                    location: '',
+                    petrolAmount: '',
+                    petrolLitres: ''
+                });
+                setEditingId(null);
+            }
+        }
+    }, [formData.date, entries]);
+
 
     // --- Actions ---
+
+    const mapEntryToForm = (entry) => {
+        const isoDate = parseDateFromSheet(entry.date);
+
+        // Parse Petrol
+        let pAmount = '';
+        let pLitres = '';
+        if (entry.petrol && entry.petrol !== 'no') {
+            const parts = entry.petrol.split('|');
+            if (parts.length >= 1) pAmount = parts[0].trim();
+            if (parts.length >= 2) pLitres = parts[1].trim();
+            if (pLitres === '-') pLitres = '';
+        }
+
+        return {
+            date: isoDate,
+            day: entry.day,
+            inTime: entry.inTime,
+            outTime: entry.outTime,
+            charges: entry.charges,
+            expenses: entry.expenses,
+            kilometres: entry.kilometres,
+            location: entry.location,
+            petrolAmount: pAmount,
+            petrolLitres: pLitres
+        };
+    };
 
     const loadData = async () => {
         setIsRefreshing(true);
@@ -105,7 +166,16 @@ const TimeTracker = () => {
                 location: r[7] || '',
                 petrol: r[8] || ''
             }));
-            setEntries(mapped.reverse());
+            const loadedEntries = mapped.reverse();
+            setEntries(loadedEntries);
+
+            // Re-check current form date against newly loaded data
+            const formattedCurrentDate = formatDateForSheet(formData.date);
+            const match = loadedEntries.find(e => e.date === formattedCurrentDate);
+            if (match && editingId === null) {
+                setFormData(mapEntryToForm(match));
+                setEditingId(match.id);
+            }
         }
         setIsRefreshing(false);
     };
@@ -198,31 +268,7 @@ const TimeTracker = () => {
 
     const handleEdit = (entry) => {
         setEditingId(entry.id);
-        const isoDate = parseDateFromSheet(entry.date);
-
-        // Parse Petrol
-        let pAmount = '';
-        let pLitres = '';
-        if (entry.petrol && entry.petrol !== 'no') {
-            const parts = entry.petrol.split('|');
-            if (parts.length >= 1) pAmount = parts[0].trim();
-            if (parts.length >= 2) pLitres = parts[1].trim();
-            if (pLitres === '-') pLitres = '';
-        }
-
-        setFormData({
-            date: isoDate,
-            day: entry.day,
-            inTime: entry.inTime,
-            outTime: entry.outTime,
-            charges: entry.charges,
-            expenses: entry.expenses,
-            kilometres: entry.kilometres,
-            location: entry.location,
-            petrolAmount: pAmount,
-            petrolLitres: pLitres
-        });
-
+        setFormData(mapEntryToForm(entry));
         setIsFormOpen(true); // Open form on edit
 
         // Scroll to form on mobile

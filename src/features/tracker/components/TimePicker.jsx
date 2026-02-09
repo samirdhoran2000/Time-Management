@@ -7,6 +7,8 @@ import React, { useState, useEffect, useRef } from 'react';
 const TimePicker = ({ value, onChange, label, disabled = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef(null);
+    const hourScrollRef = useRef(null);
+    const minuteScrollRef = useRef(null);
 
     // Parse current value (Expect format: "HH:MM AM/PM" or similar)
     const parseTime = (timeStr) => {
@@ -38,6 +40,21 @@ const TimePicker = ({ value, onChange, label, disabled = false }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Auto-scroll logic
+    useEffect(() => {
+        if (isOpen) {
+            // Wait for DOM to be ready
+            const timer = setTimeout(() => {
+                const hourEl = hourScrollRef.current?.querySelector('[data-selected="true"]');
+                const minEl = minuteScrollRef.current?.querySelector('[data-selected="true"]');
+
+                if (hourEl) hourEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (minEl) minEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen, currentTime.hour, currentTime.minute]);
 
     const handleSelect = (type, val) => {
         const newTime = { ...currentTime, [type]: val };
@@ -105,11 +122,12 @@ const TimePicker = ({ value, onChange, label, disabled = false }) => {
                                     +1
                                 </button>
 
-                                <div className="h-40 w-full overflow-y-auto no-scrollbar space-y-1 px-1">
+                                <div className="h-40 w-full overflow-y-auto no-scrollbar space-y-1 px-1" ref={hourScrollRef}>
                                     {hours.map(h => (
                                         <button
                                             key={h}
                                             type="button"
+                                            data-selected={currentTime.hour === h}
                                             onClick={() => handleSelect('hour', h)}
                                             className={`w-full py-2 text-sm rounded-lg transition-all ${currentTime.hour === h ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800'}`}
                                         >
@@ -139,11 +157,12 @@ const TimePicker = ({ value, onChange, label, disabled = false }) => {
                                     +1
                                 </button>
 
-                                <div className="h-40 w-full overflow-y-auto no-scrollbar space-y-1 px-1">
+                                <div className="h-40 w-full overflow-y-auto no-scrollbar space-y-1 px-1" ref={minuteScrollRef}>
                                     {minutes.map(m => (
                                         <button
                                             key={m}
                                             type="button"
+                                            data-selected={currentTime.minute === m}
                                             onClick={() => handleSelect('minute', m)}
                                             className={`w-full py-2 text-sm rounded-lg transition-all ${currentTime.minute === m ? 'bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/20' : 'text-zinc-400 hover:bg-zinc-800'}`}
                                         >

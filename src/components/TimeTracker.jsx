@@ -39,7 +39,7 @@ const TimeTracker = () => {
         day: getDayName(getTodayLocal()),
         inTime: '12:00 PM', // Default per requirement
         outTime: '',
-        charges: '909.0900909', // Default per requirement
+        charges: '909', // Default per requirement
         expenses: '',
         kilometres: '',
         location: '',
@@ -107,7 +107,7 @@ const TimeTracker = () => {
                     day: getDayName(currentDate),
                     inTime: '12:00 PM',
                     outTime: '',
-                    charges: '909.0900909',
+                    charges: '909',
                     expenses: '',
                     kilometres: '',
                     location: '',
@@ -192,7 +192,7 @@ const TimeTracker = () => {
             day: getDayName(today),
             inTime: '12:00 PM',
             outTime: '',
-            charges: '909.0900909',
+            charges: '909',
             expenses: '',
             kilometres: '',
             location: '',

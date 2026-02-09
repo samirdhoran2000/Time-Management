@@ -103,13 +103,27 @@ const TimePicker = ({ value, onChange, label, disabled = false }) => {
                 >
                     <div
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full max-w-[320px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 duration-200"
+                        className="w-full max-w-[280px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 duration-200"
                     >
-                        <div className="text-center mb-6">
+                        <div className="text-center mb-4">
                             <h4 className="text-sm font-semibold text-white">{label || 'Select Time'}</h4>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-6">
+                        {/* AM/PM - Compact Horizontal Selection moved to Top */}
+                        <div className="mb-6 p-1 bg-zinc-800/50 rounded-xl flex gap-1">
+                            {['AM', 'PM'].map(p => (
+                                <button
+                                    key={p}
+                                    type="button"
+                                    onClick={() => handleSelect('period', p)}
+                                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 ${currentTime.period === p ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                >
+                                    {p}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
                             {/* Hours */}
                             <div className="flex flex-col items-center gap-2">
                                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Hour</label>
@@ -178,23 +192,6 @@ const TimePicker = ({ value, onChange, label, disabled = false }) => {
                                 >
                                     -1
                                 </button>
-                            </div>
-
-                            {/* AM/PM */}
-                            <div className="flex flex-col gap-2 pt-6">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center block">Period</label>
-                                <div className="flex flex-col gap-2">
-                                    {['AM', 'PM'].map(p => (
-                                        <button
-                                            key={p}
-                                            type="button"
-                                            onClick={() => handleSelect('period', p)}
-                                            className={`w-full py-3 text-sm rounded-lg transition-all ${currentTime.period === p ? 'bg-indigo-600 text-white font-bold' : 'text-zinc-400 hover:bg-zinc-800'}`}
-                                        >
-                                            {p}
-                                        </button>
-                                    ))}
-                                </div>
                             </div>
                         </div>
 

@@ -46,8 +46,22 @@ const TimePicker = ({ value, onChange, label, disabled = false }) => {
         onChange(timeString);
     };
 
+    const adjustTime = (type, amount) => {
+        let newVal;
+        if (type === 'hour') {
+            let h = parseInt(currentTime.hour);
+            h = ((h + amount - 1 + 12) % 12) + 1;
+            newVal = String(h).padStart(2, '0');
+        } else if (type === 'minute') {
+            let m = parseInt(currentTime.minute);
+            m = (m + amount + 60) % 60;
+            newVal = String(m).padStart(2, '0');
+        }
+        handleSelect(type, newVal);
+    };
+
     const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
-    const minutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')); // 5-minute increments
+    const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')); // 1-minute increments
 
     return (
         <div className="relative" ref={containerRef}>
@@ -72,49 +86,83 @@ const TimePicker = ({ value, onChange, label, disabled = false }) => {
                 >
                     <div
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full max-w-[280px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 duration-200"
+                        className="w-full max-w-[320px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 duration-200"
                     >
                         <div className="text-center mb-6">
                             <h4 className="text-sm font-semibold text-white">{label || 'Select Time'}</h4>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-3 gap-6">
                             {/* Hours */}
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center block">Hour</label>
-                                <div className="h-48 overflow-y-auto no-scrollbar space-y-1 px-1">
+                            <div className="flex flex-col items-center gap-2">
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Hour</label>
+
+                                <button
+                                    type="button"
+                                    onClick={() => adjustTime('hour', 1)}
+                                    className="w-full py-1.5 flex justify-center text-xs font-bold bg-zinc-800/50 text-indigo-400 hover:bg-indigo-500 hover:text-white rounded-lg transition-all active:scale-95"
+                                >
+                                    +1
+                                </button>
+
+                                <div className="h-40 w-full overflow-y-auto no-scrollbar space-y-1 px-1">
                                     {hours.map(h => (
                                         <button
                                             key={h}
                                             type="button"
                                             onClick={() => handleSelect('hour', h)}
-                                            className={`w-full py-2 text-sm rounded-lg transition-all ${currentTime.hour === h ? 'bg-indigo-600 text-white font-bold' : 'text-zinc-400 hover:bg-zinc-800'}`}
+                                            className={`w-full py-2 text-sm rounded-lg transition-all ${currentTime.hour === h ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:bg-zinc-800'}`}
                                         >
                                             {h}
                                         </button>
                                     ))}
                                 </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => adjustTime('hour', -1)}
+                                    className="w-full py-1.5 flex justify-center text-xs font-bold bg-zinc-800/50 text-indigo-400 hover:bg-indigo-500 hover:text-white rounded-lg transition-all active:scale-95"
+                                >
+                                    -1
+                                </button>
                             </div>
 
                             {/* Minutes */}
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center block">Min</label>
-                                <div className="h-48 overflow-y-auto no-scrollbar space-y-1 px-1">
+                            <div className="flex flex-col items-center gap-2">
+                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Min</label>
+
+                                <button
+                                    type="button"
+                                    onClick={() => adjustTime('minute', 1)}
+                                    className="w-full py-1.5 flex justify-center text-xs font-bold bg-zinc-800/50 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all active:scale-95"
+                                >
+                                    +1
+                                </button>
+
+                                <div className="h-40 w-full overflow-y-auto no-scrollbar space-y-1 px-1">
                                     {minutes.map(m => (
                                         <button
                                             key={m}
                                             type="button"
                                             onClick={() => handleSelect('minute', m)}
-                                            className={`w-full py-2 text-sm rounded-lg transition-all ${currentTime.minute === m ? 'bg-indigo-600 text-white font-bold' : 'text-zinc-400 hover:bg-zinc-800'}`}
+                                            className={`w-full py-2 text-sm rounded-lg transition-all ${currentTime.minute === m ? 'bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/20' : 'text-zinc-400 hover:bg-zinc-800'}`}
                                         >
                                             {m}
                                         </button>
                                     ))}
                                 </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => adjustTime('minute', -1)}
+                                    className="w-full py-1.5 flex justify-center text-xs font-bold bg-zinc-800/50 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all active:scale-95"
+                                >
+                                    -1
+                                </button>
                             </div>
 
                             {/* AM/PM */}
-                            <div className="space-y-3">
+                            <div className="flex flex-col gap-2 pt-6">
                                 <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center block">Period</label>
                                 <div className="flex flex-col gap-2">
                                     {['AM', 'PM'].map(p => (

@@ -10,8 +10,8 @@ const EntryDetailModal = ({ entry, onClose }) => {
         }
         const parts = petrolValue.split('|');
         return {
-            litres: parts[0]?.trim() || '-',
-            rupees: parts[1]?.trim() || '-'
+            litres: parts[1]?.trim() || '-',
+            rupees: parts[0]?.trim() || '-'
         };
     };
 

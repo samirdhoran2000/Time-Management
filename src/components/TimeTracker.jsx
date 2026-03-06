@@ -154,18 +154,30 @@ const TimeTracker = () => {
         const rows = await fetchRows();
         if (rows) {
             // Assuming Row 1 is headers.
-            const mapped = rows.slice(1).map((r, i) => ({
-                id: i,
-                date: r[0] || '', // dd-mm-yyyy
-                day: r[1] || '',
-                inTime: r[2] || '',
-                outTime: r[3] || '',
-                charges: r[4] || '',
-                expenses: r[5] || '',
-                kilometres: r[6] || '',
-                location: r[7] || '',
-                petrol: r[8] || ''
-            }));
+            const mapped = [];
+            const dataRows = rows.slice(1);
+            for (let i = 0; i < dataRows.length; i++) {
+                const r = dataRows[i];
+                const dateVal = r[1] ? String(r[1]).trim() : '';
+
+                if (!dateVal) {
+                    break; // Stop iterating once an empty date is found
+                }
+
+                mapped.push({
+                    id: i,
+                    date: dateVal, // dd-mm-yyyy
+                    day: r[2] || '',
+                    inTime: r[3] || '',
+                    outTime: r[4] || '',
+                    charges: r[5] || '',
+                    expenses: r[6] || '',
+                    kilometres: r[7] || '',
+                    location: r[8] || '',
+                    petrol: r[9] || ''
+                });
+            }
+
             const loadedEntries = mapped.reverse();
             setEntries(loadedEntries);
 
@@ -216,9 +228,9 @@ const TimeTracker = () => {
 
             const formattedDate = formatDateForSheet(formData.date);
 
-            // Prepare Row Data
-            // Columns: [Date, Day, InTime, OutTime, Charges, Expenses, Kilometres, Location, Petrol]
+            // Columns: [''(New Column A), Date, Day, InTime, OutTime, Charges, Expenses, Kilometres, Location, Petrol]
             const rowToSave = [
+                '',
                 formattedDate,
                 formData.day,
                 formData.inTime,

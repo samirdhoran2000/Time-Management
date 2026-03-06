@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - drive-tracker
+      - main
   workflow_dispatch:
 
 permissions:

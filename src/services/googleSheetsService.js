@@ -18,10 +18,13 @@ export const fetchRows = async (spreadsheetId, sheetName, accessToken) => {
 };
 
 export const appendRow = async (spreadsheetId, sheetName, accessToken, rowArray) => {
-    return request(`${spreadsheetId}/values/${sheetName}!A1:append?valueInputOption=USER_ENTERED`, {
+    // We append starting from Column B, same as updateRow, because Column A is intentionally left blank.
+    // If we start at Column A, Google Sheets append considers the rows empty and overwrites Row 1.
+    const dataToWrite = rowArray.slice(1);
+    return request(`${spreadsheetId}/values/${sheetName}!B1:append?valueInputOption=USER_ENTERED`, {
         method: 'POST',
         accessToken,
-        body: JSON.stringify({ values: [rowArray] })
+        body: JSON.stringify({ values: [dataToWrite] })
     });
 };
 

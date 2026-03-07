@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FormField from './FormField';
+import ExpenseBuilder from './ExpenseBuilder';
 
 const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCancel, minDate, maxDate }) => {
     const [showExtras, setShowExtras] = useState(false);
@@ -177,12 +178,9 @@ const TrackerForm = ({ formData, onChange, onSubmit, loading, editingId, onCance
                 {/* Extras Section */}
                 {showExtras && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 animate-in slide-in-from-top-2 fade-in duration-300">
-                        <FormField
-                            label="Expenses"
-                            name="expenses"
+                        <ExpenseBuilder
                             value={formData.expenses}
                             onChange={onChange}
-                            placeholder="0"
                         />
 
                         {/* Petrol Group */}

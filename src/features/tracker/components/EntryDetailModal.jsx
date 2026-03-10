@@ -17,6 +17,32 @@ const EntryDetailModal = ({ entry, onClose }) => {
 
     const petrolData = parsePetrol(entry.petrol);
 
+    // Parse expenses field (format: "item ₹ price | item ₹ price")
+    const parseExpenses = (expenseValue) => {
+        if (!expenseValue || expenseValue === 'None') return { items: [], total: 0 };
+
+        // Handle old format (just numbers)
+        if (!isNaN(expenseValue) && !expenseValue.includes('₹')) {
+            return {
+                items: [{ name: 'Misc', price: expenseValue }],
+                total: parseFloat(expenseValue) || 0
+            };
+        }
+
+        const items = expenseValue.split('|').map(itemStr => {
+            const match = itemStr.match(/(.+?) ₹ (\d+(\.\d+)?)/);
+            if (match) {
+                return { name: match[1].trim(), price: parseFloat(match[2]) || 0 };
+            }
+            return { name: itemStr.trim(), price: 0 };
+        });
+
+        const total = items.reduce((sum, item) => sum + item.price, 0);
+        return { items, total };
+    };
+
+    const expenseData = parseExpenses(entry.expenses);
+
     return (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 border border-zinc-700/50 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/10 animate-in fade-in zoom-in duration-300">
@@ -154,13 +180,32 @@ const EntryDetailModal = ({ entry, onClose }) => {
                         {/* Expenses */}
                         {entry.expenses && entry.expenses !== 'None' && (
                             <div className="bg-gradient-to-br from-orange-500/10 to-amber-600/5 p-3 rounded-lg border border-orange-500/20">
-                                <label className="text-xs text-orange-400 uppercase tracking-wide font-semibold flex items-center gap-1.5 mb-1.5">
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                    </svg>
-                                    Expenses
+                                <label className="text-xs text-orange-400 uppercase tracking-wide font-semibold flex flex-row items-center justify-between mb-2">
+                                    <div className="flex items-center gap-1.5">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                        </svg>
+                                        Expenses
+                                    </div>
+                                    {expenseData.total > 0 && (
+                                        <span className="text-orange-300 font-bold bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20">
+                                            Total: ₹{expenseData.total}
+                                        </span>
+                                    )}
                                 </label>
-                                <p className="text-sm text-white whitespace-pre-wrap leading-relaxed">{entry.expenses}</p>
+
+                                {expenseData.items.length > 0 ? (
+                                    <div className="space-y-1.5">
+                                        {expenseData.items.map((item, idx) => (
+                                            <div key={idx} className="flex justify-between items-center bg-orange-500/5 px-2.5 py-1.5 rounded border border-orange-500/10">
+                                                <span className="text-sm text-zinc-300">{item.name}</span>
+                                                <span className="text-sm font-semibold text-white">₹{item.price}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-white">{entry.expenses}</p>
+                                )}
                             </div>
                         )}
                     </div>

@@ -21,11 +21,12 @@ export const appendRow = async (spreadsheetId, sheetName, accessToken, rowArray)
     // We append starting from Column B, same as updateRow, because Column A is intentionally left blank.
     // If we start at Column A, Google Sheets append considers the rows empty and overwrites Row 1.
     const dataToWrite = rowArray.slice(1);
-    return request(`${spreadsheetId}/values/${sheetName}!B1:append?valueInputOption=USER_ENTERED`, {
+    const response = await request(`${spreadsheetId}/values/${sheetName}!B1:append?valueInputOption=USER_ENTERED`, {
         method: 'POST',
         accessToken,
         body: JSON.stringify({ values: [dataToWrite] })
     });
+    return response.updates; // Returns { spreadsheetId, updatedRange, updatedRows... }
 };
 
 export const updateRow = async (spreadsheetId, sheetName, accessToken, rowIndex, rowArray) => {
@@ -33,11 +34,12 @@ export const updateRow = async (spreadsheetId, sheetName, accessToken, rowIndex,
     // We update starting from Column B, avoiding any overwrites on Column A
     const range = `${sheetName}!B${rowIndex + 2}`;
     const dataToWrite = rowArray.slice(1);
-    return request(`${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`, {
+    const response = await request(`${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`, {
         method: 'PUT',
         accessToken,
         body: JSON.stringify({ values: [dataToWrite] })
     });
+    return response; // Returns { spreadsheetId, updatedRange, updatedRows... }
 };
 
 export const deleteRow = async (spreadsheetId, sheetId, accessToken, rowIndex) => {
@@ -60,6 +62,98 @@ export const deleteRow = async (spreadsheetId, sheetId, accessToken, rowIndex) =
                 }
             }]
         })
+    });
+};
+
+export const setRowMergeAndFormat = async (spreadsheetId, sheetId, accessToken, rowIndex, shouldMerge) => {
+    // rowIndex comes in as the 0-based index from UI (0 -> row 2)
+    const startRowIndex = rowIndex + 1; // 0-based for API -> 1
+    const endRowIndex = startRowIndex + 1;
+    
+    // Columns D to J -> Start Index 3, End Index 10
+    const startColumnIndex = 3;
+    const endColumnIndex = 10;
+    
+    const requests = [];
+
+    if (shouldMerge) {
+        // Merge columns D-J
+        requests.push({
+            mergeCells: {
+                mergeType: 'MERGE_ALL',
+                range: {
+                    sheetId: parseInt(sheetId),
+                    startRowIndex,
+                    endRowIndex,
+                    startColumnIndex,
+                    endColumnIndex
+                }
+            }
+        });
+        
+        // Add centered formatting and a subtle background color for holidays
+        requests.push({
+            repeatCell: {
+                range: {
+                    sheetId: parseInt(sheetId),
+                    startRowIndex,
+                    endRowIndex,
+                    startColumnIndex,
+                    endColumnIndex
+                },
+                cell: {
+                    userEnteredFormat: {
+                        horizontalAlignment: 'CENTER',
+                        textFormat: {
+                            bold: true,
+                            foregroundColor: { red: 0.2, green: 0.6, blue: 0.3 }
+                        },
+                        backgroundColor: { red: 0.9, green: 0.98, blue: 0.9 }
+                    }
+                },
+                fields: 'userEnteredFormat(horizontalAlignment,textFormat,backgroundColor)'
+            }
+        });
+    } else {
+        // Unmerge
+        requests.push({
+            unmergeCells: {
+                range: {
+                    sheetId: parseInt(sheetId),
+                    startRowIndex,
+                    endRowIndex,
+                    startColumnIndex,
+                    endColumnIndex
+                }
+            }
+        });
+        
+        // Reset default formatting (clear backgrounds, standard text)
+        requests.push({
+            repeatCell: {
+                range: {
+                    sheetId: parseInt(sheetId),
+                    startRowIndex,
+                    endRowIndex,
+                    startColumnIndex,
+                    endColumnIndex
+                },
+                cell: {
+                    userEnteredFormat: {
+                        horizontalAlignment: 'LEFT',
+                        textFormat: { bold: false, foregroundColor: { red: 0, green: 0, blue: 0 } },
+                        backgroundColor: { red: 1, green: 1, blue: 1 }
+                    }
+                },
+                fields: 'userEnteredFormat(horizontalAlignment,textFormat,backgroundColor)'
+            }
+        });
+    }
+
+    return request(`${spreadsheetId}:batchUpdate`, {
+        method: 'POST',
+        accessToken,
+        body: JSON.stringify({ requests })
     });
 };
 

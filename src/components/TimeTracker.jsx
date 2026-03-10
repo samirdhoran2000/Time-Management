@@ -28,13 +28,16 @@ const TimeTracker = () => {
         appendRow,
         updateRow,
         deleteRow,
-        createSheet
+        createSheet,
+        setHolidayFormatting
     } = useGoogleSheets();
 
     // --- State ---
 
     // Form State (Internal is yyyy-mm-dd for inputs, etc)
     const [formData, setFormData] = useState({
+        isHoliday: false,
+        holidayName: '',
         date: getTodayLocal(),
         day: getDayName(getTodayLocal()),
         inTime: '12:00 PM', // Default per requirement
@@ -101,10 +104,11 @@ const TimeTracker = () => {
         } else {
             // If date has no entry but we were in Edit Mode, reset to defaults
             if (editingId !== null) {
-                const currentDate = formData.date;
                 setFormData({
-                    date: currentDate,
-                    day: getDayName(currentDate),
+                    isHoliday: false,
+                    holidayName: '',
+                    date: formData.date,
+                    day: getDayName(formData.date),
                     inTime: '12:00 PM',
                     outTime: '',
                     charges: '909',
@@ -124,6 +128,14 @@ const TimeTracker = () => {
 
     const mapEntryToForm = (entry) => {
         const isoDate = parseDateFromSheet(entry.date);
+        
+        // Detect Holiday
+        let isHoliday = false;
+        let holidayName = '';
+        if (entry.inTime && entry.inTime.startsWith('[HOLIDAY] ')) {
+            isHoliday = true;
+            holidayName = entry.inTime.replace('[HOLIDAY] ', '');
+        }
 
         // Parse Petrol
         let pAmount = '';
@@ -136,16 +148,18 @@ const TimeTracker = () => {
         }
 
         return {
+            isHoliday,
+            holidayName,
             date: isoDate,
             day: entry.day,
-            inTime: entry.inTime,
-            outTime: entry.outTime,
-            charges: entry.charges,
-            expenses: entry.expenses,
-            kilometres: entry.kilometres,
-            location: entry.location,
-            petrolAmount: pAmount,
-            petrolLitres: pLitres
+            inTime: isHoliday ? '12:00 PM' : entry.inTime,
+            outTime: isHoliday ? '' : entry.outTime,
+            charges: isHoliday ? '909' : entry.charges,
+            expenses: isHoliday ? '' : entry.expenses,
+            kilometres: isHoliday ? '' : entry.kilometres,
+            location: isHoliday ? '' : entry.location,
+            petrolAmount: isHoliday ? '' : pAmount,
+            petrolLitres: isHoliday ? '' : pLitres
         };
     };
 
@@ -200,6 +214,8 @@ const TimeTracker = () => {
     const resetForm = () => {
         const today = getTodayLocal();
         setFormData({
+            isHoliday: false,
+            holidayName: '',
             date: today,
             day: getDayName(today),
             inTime: '12:00 PM',
@@ -218,32 +234,49 @@ const TimeTracker = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Prepare Petrol Composite
-            let petrolValue = 'no';
-            if (formData.petrolAmount && formData.petrolLitres) {
-                petrolValue = `${formData.petrolAmount} | ${formData.petrolLitres}`;
-            } else if (formData.petrolAmount) {
-                petrolValue = `${formData.petrolAmount} | -`;
-            }
-
             const formattedDate = formatDateForSheet(formData.date);
+            let rowToSave;
+            
+            if (formData.isHoliday) {
+                if (!formData.holidayName.trim()) {
+                    alert("Please enter a holiday name.");
+                    return;
+                }
+                rowToSave = [
+                    '',
+                    formattedDate,
+                    formData.day,
+                    `[HOLIDAY] ${formData.holidayName.trim()}`,
+                    '', '', '', '', '', ''
+                ];
+            } else {
+                // Prepare Petrol Composite
+                let petrolValue = 'no';
+                if (formData.petrolAmount && formData.petrolLitres) {
+                    petrolValue = `${formData.petrolAmount} | ${formData.petrolLitres}`;
+                } else if (formData.petrolAmount) {
+                    petrolValue = `${formData.petrolAmount} | -`;
+                }
 
-            // Columns: [''(New Column A), Date, Day, InTime, OutTime, Charges, Expenses, Kilometres, Location, Petrol]
-            const rowToSave = [
-                '',
-                formattedDate,
-                formData.day,
-                formData.inTime,
-                formData.outTime,
-                formData.charges,
-                formData.expenses,
-                formData.kilometres,
-                formData.location,
-                petrolValue
-            ];
+                rowToSave = [
+                    '',
+                    formattedDate,
+                    formData.day,
+                    formData.inTime,
+                    formData.outTime,
+                    formData.charges,
+                    formData.expenses,
+                    formData.kilometres,
+                    formData.location,
+                    petrolValue
+                ];
+            }
 
             // Check for duplicate date
             const existingEntry = entries.find(entry => entry.date === formattedDate);
+            
+            let targetRowIndex = null;
+            let resultData = null;
 
             if (editingId === null && existingEntry) {
                 const confirmed = window.confirm(
@@ -251,23 +284,38 @@ const TimeTracker = () => {
                 );
                 if (!confirmed) return;
 
-                // If confirmed, update the existing row instead of appending
-                await updateRow(existingEntry.id, rowToSave);
+                targetRowIndex = existingEntry.id;
+                // Unmerge first if resolving a holiday back to regular (so Google Sheets doesn't drop the data)
+                await setHolidayFormatting(targetRowIndex, formData.isHoliday);
+                resultData = await updateRow(targetRowIndex, rowToSave);
             } else if (editingId !== null) {
-                // Check if we're changing the date to another existing date (duplicate prevention on edit)
                 const otherDuplicate = entries.find(entry => entry.date === formattedDate && entry.id !== editingId);
                 if (otherDuplicate) {
                     const confirmed = window.confirm(
                         `Another entry for ${formattedDate} already exists. Do you want to overwrite it and update this entry?`
                     );
                     if (!confirmed) return;
-                    // Note: This logic currently updates THIS edited row with the duplicate's date.
-                    // To be truly clean, we might want to delete the otherDuplicate and update this one, 
-                    // but for now, simple overwriting logic is safer.
                 }
-                await updateRow(editingId, rowToSave);
+                targetRowIndex = editingId;
+                // Unmerge first if resolving a holiday back to regular
+                await setHolidayFormatting(targetRowIndex, formData.isHoliday);
+                resultData = await updateRow(targetRowIndex, rowToSave);
             } else {
-                await appendRow(rowToSave);
+                resultData = await appendRow(rowToSave);
+                // Extract row index from append response (e.g. "Sheet1!B10:K10")
+                if (resultData && resultData.updatedRange) {
+                     const match = resultData.updatedRange.match(/![a-zA-Z]+(\d+)/);
+                     if (match && match[1]) {
+                         // UI index is (row Number - 2)
+                         targetRowIndex = parseInt(match[1]) - 2;
+                     }
+                }
+            }
+            
+            // Format column merges for Holiday rows (always safe to apply after append)
+            if (targetRowIndex !== null && resultData && formData.isHoliday) {
+                // If it's a holiday, apply the formatting after the row is appended/updated
+                await setHolidayFormatting(targetRowIndex, true);
             }
 
             resetForm();
@@ -409,6 +457,7 @@ const TimeTracker = () => {
                         <TrackerForm
                             formData={formData}
                             onChange={handleInputChange}
+                            setFormData={setFormData}
                             onSubmit={handleSubmit}
                             loading={loading}
                             editingId={editingId}

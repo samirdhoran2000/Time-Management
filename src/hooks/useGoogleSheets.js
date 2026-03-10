@@ -217,6 +217,24 @@ export const useGoogleSheets = () => {
         }
     }, [accessToken, spreadsheetId, allSheets]);
 
+    // Apply Holiday Formatting
+    const setHolidayFormatting = useCallback(async (rowIndex, isHoliday) => {
+        if (!accessToken || !spreadsheetId) return;
+        
+        const sheetId = localStorage.getItem(LOCAL_STORAGE_KEYS.SHEET_GID);
+        if (sheetId === null) {
+             console.warn("Sheet GID not found for holiday formatting.");
+             return;
+        }
+        
+        try {
+             await sheetsService.setRowMergeAndFormat(spreadsheetId, sheetId, accessToken, rowIndex, isHoliday);
+        } catch (err) {
+             console.error("Failed to set holiday formatting:", err);
+             // We won't block the UI if just formatting fails
+        }
+    }, [accessToken, spreadsheetId]);
+
     return {
         // State
         credentials,
@@ -239,6 +257,7 @@ export const useGoogleSheets = () => {
         appendRow,
         updateRow,
         deleteRow,
-        createSheet
+        createSheet,
+        setHolidayFormatting
     };
 };

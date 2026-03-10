@@ -42,6 +42,10 @@ const EntryDetailModal = ({ entry, onClose }) => {
     };
 
     const expenseData = parseExpenses(entry.expenses);
+    
+    // Check if it's a holiday
+    const isHoliday = entry.inTime && entry.inTime.startsWith('[HOLIDAY]');
+    const holidayName = isHoliday ? entry.inTime.replace('[HOLIDAY] ', '') : '';
 
     return (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -66,7 +70,7 @@ const EntryDetailModal = ({ entry, onClose }) => {
                     {/* Colorful Content Grid */}
                     <div className="space-y-3">
                         {/* Date & Day Row */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className={`grid ${isHoliday ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
                             <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 p-3 rounded-lg border border-purple-500/20">
                                 <label className="text-xs text-purple-400 uppercase tracking-wide font-semibold flex items-center gap-1.5 mb-2">
                                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -89,124 +93,157 @@ const EntryDetailModal = ({ entry, onClose }) => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-3 rounded-lg border border-blue-500/20">
-                                <label className="text-xs text-blue-400 uppercase tracking-wide font-semibold flex items-center gap-1.5 mb-2">
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Time
-                                </label>
-                                <div className="text-sm space-y-1">
-                                    <div className="flex items-center gap-1.5 bg-green-500/10 px-2 py-1 rounded border border-green-500/20">
-                                        <svg className="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                        </svg>
-                                        <span className="text-green-400 font-medium">In:</span>
-                                        <span className="text-white font-semibold">{entry.inTime}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">
-                                        <svg className="w-3.5 h-3.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                                        </svg>
-                                        <span className="text-orange-400 font-medium">Out:</span>
-                                        <span className="text-white font-semibold">{entry.outTime || '-'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Financials & Travel Section */}
-                        <div className="bg-gradient-to-br from-emerald-500/5 via-cyan-500/5 to-blue-500/5 p-3 rounded-lg border border-cyan-500/20">
-                            <label className="text-xs text-cyan-400 uppercase tracking-wide font-semibold flex items-center gap-1.5 mb-2">
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                </svg>
-                                Financials & Travel
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-1.5 rounded border border-emerald-500/20">
-                                    <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <div className="flex-1 min-w-0">
-                                        <span className="text-xs text-emerald-400 block">Charges</span>
-                                        <span className="text-white font-mono font-bold text-sm truncate block">{entry.charges}</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-1.5 bg-blue-500/10 px-2 py-1.5 rounded border border-blue-500/20">
-                                    <svg className="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                    </svg>
-                                    <div className="flex-1 min-w-0">
-                                        <span className="text-xs text-blue-400 block">Kilometres</span>
-                                        <span className="text-white font-mono font-bold text-sm truncate block">{entry.kilometres}</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-1.5 bg-cyan-500/10 px-2 py-1.5 rounded border border-cyan-500/20">
-                                    <svg className="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0a4 4 0 004 4h4a2 2 0 002-2v-5a2 2 0 00-2-2h-4a2 2 0 00-2 2v3z" />
-                                    </svg>
-                                    <div className="flex-1 min-w-0">
-                                        <span className="text-xs text-cyan-400 block">Litres</span>
-                                        <span className="text-white font-semibold text-sm truncate block">{petrolData.litres}</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-1.5 bg-teal-500/10 px-2 py-1.5 rounded border border-teal-500/20">
-                                    <svg className="w-3.5 h-3.5 text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                    <div className="flex-1 min-w-0">
-                                        <span className="text-xs text-teal-400 block">Rupees</span>
-                                        <span className="text-white font-mono font-semibold text-sm truncate block">₹{petrolData.rupees}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Location */}
-                        {entry.location && entry.location !== '-' && (
-                            <div className="bg-gradient-to-br from-green-500/10 to-emerald-600/5 p-3 rounded-lg border border-green-500/20">
-                                <label className="text-xs text-green-400 uppercase tracking-wide font-semibold flex items-center gap-1.5 mb-1.5">
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    Location
-                                </label>
-                                <p className="text-sm text-white font-medium">{entry.location}</p>
-                            </div>
-                        )}
-
-                        {/* Expenses */}
-                        {entry.expenses && entry.expenses !== 'None' && (
-                            <div className="bg-gradient-to-br from-orange-500/10 to-amber-600/5 p-3 rounded-lg border border-orange-500/20">
-                                <label className="text-xs text-orange-400 uppercase tracking-wide font-semibold flex flex-row items-center justify-between mb-2">
-                                    <div className="flex items-center gap-1.5">
+                            
+                            {!isHoliday && (
+                                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-3 rounded-lg border border-blue-500/20">
+                                    <label className="text-xs text-blue-400 uppercase tracking-wide font-semibold flex items-center gap-1.5 mb-2">
                                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        Expenses
+                                        Time
+                                    </label>
+                                    <div className="text-sm space-y-1">
+                                        <div className="flex items-center gap-1.5 bg-green-500/10 px-2 py-1 rounded border border-green-500/20">
+                                            <svg className="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                            </svg>
+                                            <span className="text-green-400 font-medium">In:</span>
+                                            <span className="text-white font-semibold">{entry.inTime}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">
+                                            <svg className="w-3.5 h-3.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                            </svg>
+                                            <span className="text-orange-400 font-medium">Out:</span>
+                                            <span className="text-white font-semibold">{entry.outTime || '-'}</span>
+                                        </div>
                                     </div>
-                                    {expenseData.total > 0 && (
-                                        <span className="text-orange-300 font-bold bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20">
-                                            Total: ₹{expenseData.total}
-                                        </span>
-                                    )}
-                                </label>
+                                </div>
+                            )}
+                        </div>
 
-                                {expenseData.items.length > 0 ? (
-                                    <div className="space-y-1.5">
-                                        {expenseData.items.map((item, idx) => (
-                                            <div key={idx} className="flex justify-between items-center bg-orange-500/5 px-2.5 py-1.5 rounded border border-orange-500/10">
-                                                <span className="text-sm text-zinc-300">{item.name}</span>
-                                                <span className="text-sm font-semibold text-white">₹{item.price}</span>
-                                            </div>
-                                        ))}
+                        {isHoliday ? (
+                             <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 p-6 rounded-lg border border-emerald-500/30 flex flex-col items-center justify-center py-10 relative overflow-hidden">
+                                 {/* Decorative Background Elements */}
+                                 <div className="absolute top-0 right-0 p-4 opacity-10">
+                                    <svg className="w-24 h-24 text-emerald-400 transform rotate-12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
+                                    </svg>
+                                 </div>
+                                 <div className="absolute bottom-0 left-0 p-2 opacity-10">
+                                    <svg className="w-16 h-16 text-teal-400 transform -rotate-12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                    </svg>
+                                 </div>
+                                 
+                                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 flex items-center justify-center p-0.5 shadow-lg shadow-emerald-500/20 mb-4 z-10">
+                                    <div className="w-full h-full bg-zinc-900 rounded-full flex items-center justify-center">
+                                         <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                         </svg>
                                     </div>
-                                ) : (
-                                    <p className="text-sm text-white">{entry.expenses}</p>
+                                 </div>
+                                 <span className="text-emerald-400 text-sm font-semibold tracking-widest uppercase mb-1 z-10 opacity-80">Holiday</span>
+                                 <h2 className="text-2xl sm:text-3xl font-bold text-white text-center z-10 break-words max-w-full leading-tight">
+                                     {holidayName}
+                                 </h2>
+                             </div>
+                        ) : (
+                            <>
+                                {/* Financials & Travel Section */}
+                                <div className="bg-gradient-to-br from-emerald-500/5 via-cyan-500/5 to-blue-500/5 p-3 rounded-lg border border-cyan-500/20">
+                                    <label className="text-xs text-cyan-400 uppercase tracking-wide font-semibold flex items-center gap-1.5 mb-2">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        </svg>
+                                        Financials & Travel
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="flex items-center gap-1.5 bg-emerald-500/10 px-2 py-1.5 rounded border border-emerald-500/20">
+                                            <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <div className="flex-1 min-w-0">
+                                                <span className="text-xs text-emerald-400 block">Charges</span>
+                                                <span className="text-white font-mono font-bold text-sm truncate block">{entry.charges}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 bg-blue-500/10 px-2 py-1.5 rounded border border-blue-500/20">
+                                            <svg className="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                            </svg>
+                                            <div className="flex-1 min-w-0">
+                                                <span className="text-xs text-blue-400 block">Kilometres</span>
+                                                <span className="text-white font-mono font-bold text-sm truncate block">{entry.kilometres}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 bg-cyan-500/10 px-2 py-1.5 rounded border border-cyan-500/20">
+                                            <svg className="w-3.5 h-3.5 text-cyan-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0a4 4 0 004 4h4a2 2 0 002-2v-5a2 2 0 00-2-2h-4a2 2 0 00-2 2v3z" />
+                                            </svg>
+                                            <div className="flex-1 min-w-0">
+                                                <span className="text-xs text-cyan-400 block">Litres</span>
+                                                <span className="text-white font-semibold text-sm truncate block">{petrolData.litres}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 bg-teal-500/10 px-2 py-1.5 rounded border border-teal-500/20">
+                                            <svg className="w-3.5 h-3.5 text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                            <div className="flex-1 min-w-0">
+                                                <span className="text-xs text-teal-400 block">Rupees</span>
+                                                <span className="text-white font-mono font-semibold text-sm truncate block">₹{petrolData.rupees}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Location */}
+                                {entry.location && entry.location !== '-' && (
+                                    <div className="bg-gradient-to-br from-green-500/10 to-emerald-600/5 p-3 rounded-lg border border-green-500/20">
+                                        <label className="text-xs text-green-400 uppercase tracking-wide font-semibold flex items-center gap-1.5 mb-1.5">
+                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            Location
+                                        </label>
+                                        <p className="text-sm text-white font-medium">{entry.location}</p>
+                                    </div>
                                 )}
-                            </div>
+
+                                {/* Expenses */}
+                                {entry.expenses && entry.expenses !== 'None' && (
+                                    <div className="bg-gradient-to-br from-orange-500/10 to-amber-600/5 p-3 rounded-lg border border-orange-500/20">
+                                        <label className="text-xs text-orange-400 uppercase tracking-wide font-semibold flex flex-row items-center justify-between mb-2">
+                                            <div className="flex items-center gap-1.5">
+                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                                </svg>
+                                                Expenses
+                                            </div>
+                                            {expenseData.total > 0 && (
+                                                <span className="text-orange-300 font-bold bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20">
+                                                    Total: ₹{expenseData.total}
+                                                </span>
+                                            )}
+                                        </label>
+
+                                        {expenseData.items.length > 0 ? (
+                                            <div className="space-y-1.5">
+                                                {expenseData.items.map((item, idx) => (
+                                                    <div key={idx} className="flex justify-between items-center bg-orange-500/5 px-2.5 py-1.5 rounded border border-orange-500/10">
+                                                        <span className="text-sm text-zinc-300">{item.name}</span>
+                                                        <span className="text-sm font-semibold text-white">₹{item.price}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-white">{entry.expenses}</p>
+                                        )}
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
 

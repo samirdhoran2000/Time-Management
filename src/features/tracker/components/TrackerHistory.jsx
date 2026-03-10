@@ -53,27 +53,50 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRef
 
                                     const isToday = rowDate === today;
                                     const isMissingData = !e.inTime || !e.outTime || Number(e.charges) === 0;
+                                    
+                                    const isHoliday = e.inTime && e.inTime.startsWith('[HOLIDAY]');
+                                    const holidayName = isHoliday ? e.inTime.replace('[HOLIDAY] ', '') : '';
 
-                                    const isTodayWarning = isToday && isMissingData;
-                                    const isHistoryWarning = !isToday && isMissingData;
+                                    const isTodayWarning = isToday && isMissingData && !isHoliday;
+                                    const isHistoryWarning = !isToday && isMissingData && !isHoliday;
 
 
                                     return (
-                                        <tr key={e.id} className={`group transition-colors ${isTodayWarning
+                                        <tr key={e.id} className={`group transition-colors ${
+                                                isHoliday ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-100' :
+                                                isTodayWarning
                                                 ? 'bg-red-500/10 hover:bg-red-500/20 text-red-100'
                                                 : isHistoryWarning
                                                     ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-50'
                                                     : 'hover:bg-zinc-800/90 even:bg-zinc-800/30'
                                             }`}>
-                                            <td className={`px-4 py-4 text-sm font-mono whitespace-nowrap ${isTodayWarning ? 'text-red-400' : isHistoryWarning ? 'text-blue-400' : 'text-zinc-400'}`}>{e.date}</td>
-                                            <td className="px-4 py-4 text-sm text-zinc-300">{e.day}</td>
-                                            <td className="px-4 py-4 text-sm text-zinc-400">{e.inTime}</td>
-                                            <td className="px-4 py-4 text-sm text-zinc-400">{e.outTime}</td>
-                                            <td className={`px-4 py-4 text-sm font-mono ${isTodayWarning ? 'text-red-400' : isHistoryWarning ? 'text-blue-400' : 'text-zinc-400'}`}>{e.charges}</td>
-                                            <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.expenses || 'N/A'}>{e.expenses || 'N/A'}</td>
-                                            <td className="px-4 py-4 text-sm text-zinc-400 font-mono">{e.kilometres}</td>
-                                            <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.location}>{e.location}</td>
-                                            <td className="px-4 py-4 text-sm text-zinc-400 capitalize max-w-[130px] truncate">{e.petrol}</td>
+                                            <td className={`px-4 py-4 text-sm font-mono whitespace-nowrap ${isHoliday ? 'text-emerald-400 font-bold' : isTodayWarning ? 'text-red-400' : isHistoryWarning ? 'text-blue-400' : 'text-zinc-400'}`}>{e.date}</td>
+                                            <td className={`px-4 py-4 text-sm ${isHoliday ? 'text-emerald-300 font-medium' : 'text-zinc-300'}`}>{e.day}</td>
+                                            
+                                            {isHoliday ? (
+                                                <td colSpan="7" className="px-4 py-4 text-center">
+                                                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold text-sm border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                                        </svg>
+                                                        {holidayName}
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                                        </svg>
+                                                    </span>
+                                                </td>
+                                            ) : (
+                                                <>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400">{e.inTime}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400">{e.outTime}</td>
+                                                    <td className={`px-4 py-4 text-sm font-mono ${isTodayWarning ? 'text-red-400' : isHistoryWarning ? 'text-blue-400' : 'text-zinc-400'}`}>{e.charges}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.expenses || 'N/A'}>{e.expenses || 'N/A'}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400 font-mono">{e.kilometres}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400 max-w-[150px] truncate" title={e.location}>{e.location}</td>
+                                                    <td className="px-4 py-4 text-sm text-zinc-400 capitalize max-w-[130px] truncate">{e.petrol}</td>
+                                                </>
+                                            )}
+                                            
                                             <td className="px-4 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button

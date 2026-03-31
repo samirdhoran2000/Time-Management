@@ -413,6 +413,17 @@ const TimeTracker = () => {
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                             </button>
+                            <a
+                                href={`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=${allSheets.find(s => s.title === sheetName)?.sheetId || 0}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-green-500 hover:border-green-500/50 transition-all shadow-sm shrink-0 flex items-center justify-center"
+                                title="Open in Google Sheets"
+                            >
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V7H19V19M17,11V13H7V11H17M17,15V17H7V15H17M17,7V9H7V7H17Z" />
+                                </svg>
+                            </a>
                         </div>
                         <button onClick={logout} className="text-[10px] sm:text-sm font-medium text-zinc-500 hover:text-white transition-colors shrink-0">
                             Disconnect

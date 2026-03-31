@@ -1,46 +1,69 @@
 import React, { useMemo } from 'react';
 import { calculateDuration, formatMinutes } from '../utils/dateUtils';
 
-const TrackerStats = ({ entries }) => {
+const TrackerStats = ({ entries, sheetName }) => {
     const stats = useMemo(() => {
         let totalKms = 0;
         let totalEarnings = 0;
         let totalMinutes = 0;
+        let presentCount = 0;
+        let holidayCount = 0;
 
         entries.forEach(entry => {
             // Kilometres
             const kms = parseFloat(entry.kilometres);
             if (!isNaN(kms)) totalKms += kms;
 
-            // Charges
+            // Charges & Attendance
             const charges = parseFloat(entry.charges);
             if (!isNaN(charges)) totalEarnings += charges;
+
+            const isHoliday = entry.inTime && entry.inTime.startsWith('[HOLIDAY]');
+            if (isHoliday) {
+                holidayCount++;
+            } else {
+                presentCount++;
+            }
 
             // Duration
             totalMinutes += calculateDuration(entry.inTime, entry.outTime);
         });
 
+        // Calculate Absent based on month
+        let absentCount = 0;
+        try {
+            const parts = (sheetName || "").split(' ');
+            if (parts.length >= 2) {
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                const mIdx = monthNames.indexOf(parts[0]);
+                const year = parseInt(parts[1]);
+                if (mIdx !== -1 && !isNaN(year)) {
+                    const daysInMonth = new Date(year, mIdx + 1, 0).getDate();
+                    absentCount = Math.max(0, daysInMonth - entries.length);
+                }
+            }
+        } catch (e) {
+            console.error("Month parse error", e);
+        }
+
         return {
-            totalKms: totalKms.toFixed(2),
+            totalKms: totalKms.toFixed(1),
             totalEarnings: totalEarnings.toLocaleString('en-IN', {
-                maximumFractionDigits: 2,
+                maximumFractionDigits: 0,
                 style: 'currency',
                 currency: 'INR'
             }),
-            totalWorkingHours: formatMinutes(totalMinutes)
+            totalWorkingHours: formatMinutes(totalMinutes),
+            presentCount,
+            holidayCount,
+            absentCount
         };
-    }, [entries]);
+    }, [entries, sheetName]);
 
     if (!entries || entries.length === 0) return null;
 
     return (
         <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
-            <StatCard
-                label="Distance"
-                value={`${stats.totalKms} KM`}
-                icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
-                color="text-emerald-400"
-            />
             <StatCard
                 label="Earnings"
                 value={stats.totalEarnings}
@@ -48,8 +71,23 @@ const TrackerStats = ({ entries }) => {
                 color="text-indigo-400"
             />
             <StatCard
+                label="Distance & Presence"
+                value={`${stats.totalKms} KM`}
+                icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+                color="text-emerald-400"
+            />
+            <StatCard
                 label="Hours"
                 value={stats.totalWorkingHours}
+                subInfo={
+                    <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold tracking-tight">
+                        <span className="text-emerald-500">{stats.presentCount}P</span>
+                        <span className="text-zinc-700">•</span>
+                        <span className="text-sky-500">{stats.holidayCount}H</span>
+                        <span className="text-zinc-700">•</span>
+                        <span className="text-red-500/80">{stats.absentCount}A</span>
+                    </div>
+                }
                 icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                 color="text-amber-400"
             />
@@ -57,14 +95,15 @@ const TrackerStats = ({ entries }) => {
     );
 };
 
-const StatCard = ({ label, value, icon, color }) => (
-    <div className="bg-zinc-900/50 border border-zinc-800/50 p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-4 transition-all hover:border-zinc-700/50">
-        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-zinc-800/50 flex items-center justify-center shrink-0 ${color}`}>
+const StatCard = ({ label, value, subInfo, icon, color }) => (
+    <div className="bg-zinc-900/40 border border-zinc-800/50 p-3 sm:px-4 sm:py-3.5 rounded-2xl flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3.5 transition-all hover:bg-zinc-900/60 hover:border-zinc-700/50">
+        <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-center shrink-0 ${color}`}>
             {icon}
         </div>
-        <div className="text-center sm:text-left min-w-0 w-full">
-            <p className="text-[10px] sm:text-xs text-zinc-500 font-medium uppercase tracking-wider truncate">{label}</p>
-            <p className="text-sm sm:text-xl font-bold text-white mt-0.5 sm:mt-1 truncate">{value}</p>
+        <div className="text-center sm:text-left min-w-0 w-full overflow-hidden">
+            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider truncate">{label}</p>
+            <p className="text-sm sm:text-lg font-black text-white mt-0.5 truncate">{value}</p>
+            {subInfo}
         </div>
     </div>
 );

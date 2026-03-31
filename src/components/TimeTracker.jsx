@@ -530,7 +530,7 @@ const TimeTracker = () => {
 
                     {/* Right Panel: List & Stats */}
                     <div className="lg:col-span-8 flex flex-col h-full overflow-hidden">
-                        <TrackerStats entries={entries} />
+                        <TrackerStats entries={entries} sheetName={sheetName} />
 
                         <TrackerHistory
                             entries={entries}

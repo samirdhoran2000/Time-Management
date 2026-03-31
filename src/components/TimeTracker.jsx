@@ -27,7 +27,7 @@ const TimeTracker = () => {
         fetchRows,
         appendRow,
         updateRow,
-        deleteRow,
+        moveRow,
         createSheet,
         setHolidayFormatting
     } = useGoogleSheets();
@@ -360,6 +360,58 @@ const TimeTracker = () => {
         }
     };
 
+    const handleMoveRow = async (id, direction) => {
+        // Since UI is reversed (newest at top), moving 'up' in UI
+        // means moving the row towards the end of the sheet (higher index).
+        // targetIndex: the index where the row should land.
+        // moveDimension documentation: If moved towards the end, destinationIndex
+        // is the index AFTER the dimension has been moved.
+        
+        let targetIndex;
+        if (direction === 'up') {
+            targetIndex = id + 2; // Move it past the next row
+        } else {
+            targetIndex = id - 1; // Move it before the previous row
+        }
+        
+        if (targetIndex < 0 || targetIndex > entries.length) return;
+
+        try {
+            setIsRefreshing(true);
+            await moveRow(id, targetIndex);
+            await loadData();
+        } catch (err) {
+            alert("Error reordering: " + err.message);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    const handleSortByDate = async (order = 'desc') => {
+        setIsRefreshing(true);
+        try {
+            const rows = await fetchRows();
+            if (!rows || rows.length <= 1) return;
+
+            const header = rows[0];
+            const dataRows = rows.slice(1);
+
+            dataRows.sort((a, b) => {
+                const dateA = new Date(parseDateFromSheet(String(a[1])));
+                const dateB = new Date(parseDateFromSheet(String(b[1])));
+                return order === 'asc' ? dateA - dateB : dateB - dateA;
+            });
+
+            // Prepare for batch update
+            await sheetsService.updateValueRange(spreadsheetId, sheetName, accessToken, "A2", dataRows);
+            await loadData();
+        } catch (err) {
+            alert("Error sorting: " + err.message);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
     // --- Views ---
 
     // 1. Initial State: Upload Credentials
@@ -485,6 +537,8 @@ const TimeTracker = () => {
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             onView={setViewingEntry}
+                            onMove={handleMoveRow}
+                            onSort={handleSortByDate}
                             isRefreshing={isRefreshing}
                             onRefresh={loadData}
                         />

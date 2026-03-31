@@ -1,19 +1,44 @@
 import { ddmmyyyyToIso } from "../utils/dateUtils";
 
-const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRefresh }) => {
+const TrackerHistory = ({ entries, onEdit, onDelete, onView, onMove, onSort, isRefreshing, onRefresh }) => {
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex items-center justify-between mb-4 shrink-0">
+            <div className="flex items-center justify-between mb-4 shrink-0 transition-all">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                     History
-                    <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-400 font-medium border border-zinc-700">{entries.length}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-zinc-800/50 text-xs text-zinc-400 font-medium border border-zinc-700/50">{entries.length}</span>
                 </h3>
-                <button
-                    onClick={onRefresh}
-                    className={`p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors ${isRefreshing ? 'animate-spin' : ''}`}
-                >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                </button>
+                
+                <div className="flex items-center gap-1.5 p-1 bg-zinc-900/50 rounded-xl border border-zinc-800/50 backdrop-blur-sm">
+                    <button
+                        onClick={onRefresh}
+                        className={`p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all ${isRefreshing ? 'animate-spin text-indigo-400' : ''}`}
+                        title="Refresh History"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    </button>
+                    
+                    <div className="w-px h-4 bg-zinc-800 mx-0.5" />
+                    
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={() => onSort('desc')}
+                            className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/10 transition-all border border-transparent hover:border-emerald-500/20 flex items-center gap-1.5"
+                            title="Newest Row on Top"
+                        >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
+                            Newest
+                        </button>
+                        <button
+                            onClick={() => onSort('asc')}
+                            className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-zinc-500 hover:text-white hover:bg-zinc-800 transition-all border border-transparent flex items-center gap-1.5"
+                            title="Oldest Row on Top"
+                        >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 15l7-7 7 7" /></svg>
+                            Oldest
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
@@ -21,6 +46,7 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRef
                     <table className="w-full text-left relative">
                         <thead className="bg-zinc-900/95 backdrop-blur border-b border-zinc-800 sticky top-0 z-10">
                             <tr>
+                                <th className="px-2 py-4"></th>
                                 <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
                                 <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Day</th>
                                 <th className="px-4 py-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">In</th>
@@ -36,7 +62,7 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRef
                         <tbody className="divide-y divide-zinc-800">
                             {entries.length === 0 ? (
                                 <tr>
-                                    <td colSpan="10" className="px-6 py-16 text-center">
+                                    <td colSpan="11" className="px-6 py-16 text-center">
                                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800 mb-4 opacity-50">
                                             <svg className="w-6 h-6 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                                         </div>
@@ -70,6 +96,26 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, isRefreshing, onRef
                                                     ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-50'
                                                     : 'hover:bg-zinc-800/90 even:bg-zinc-800/30'
                                             }`}>
+                                            <td className="px-2 py-4">
+                                                <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => onMove(e.id, 'up')}
+                                                        disabled={e.id === entries.length - 1}
+                                                        className="p-0.5 rounded text-zinc-600 hover:text-indigo-400 hover:bg-indigo-500/10 disabled:opacity-0 transition-colors"
+                                                        title="Move Up"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 15l7-7 7 7" /></svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => onMove(e.id, 'down')}
+                                                        disabled={e.id === 0}
+                                                        className="p-0.5 rounded text-zinc-600 hover:text-indigo-400 hover:bg-indigo-500/10 disabled:opacity-0 transition-colors"
+                                                        title="Move Down"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" /></svg>
+                                                    </button>
+                                                </div>
+                                            </td>
                                             <td className={`px-4 py-4 text-sm font-mono whitespace-nowrap ${isHoliday ? 'text-emerald-400 font-bold' : isTodayWarning ? 'text-red-400' : isHistoryWarning ? 'text-blue-400' : 'text-zinc-400'}`}>{e.date}</td>
                                             <td className={`px-4 py-4 text-sm ${isHoliday ? 'text-emerald-300 font-medium' : 'text-zinc-300'}`}>{e.day}</td>
                                             

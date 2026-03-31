@@ -235,8 +235,29 @@ export const useGoogleSheets = () => {
         }
     }, [accessToken, spreadsheetId]);
 
+    // Move Row
+    const moveRowAction = useCallback(async (sourceRowIndex, destinationRowIndex) => {
+        if (!accessToken || !spreadsheetId) return;
+
+        const sheetId = localStorage.getItem(LOCAL_STORAGE_KEYS.SHEET_GID);
+        if (sheetId === null) {
+            setError("Sheet GID not found. Please reconnect.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            return await sheetsService.moveRow(spreadsheetId, sheetId, accessToken, sourceRowIndex, destinationRowIndex);
+        } catch (err) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [accessToken, spreadsheetId]);
+
     return {
-        // State
+        // ... state ...
         credentials,
         spreadsheetId,
         sheetName,
@@ -257,6 +278,7 @@ export const useGoogleSheets = () => {
         appendRow,
         updateRow,
         deleteRow,
+        moveRow: moveRowAction,
         createSheet,
         setHolidayFormatting
     };

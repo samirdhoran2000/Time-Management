@@ -186,7 +186,39 @@ export const createSheet = async (spreadsheetId, accessToken, name) => {
     return newSheetProps;
 };
 
+export const moveRow = async (spreadsheetId, sheetId, accessToken, sourceRowIndex, destinationRowIndex) => {
+    // sourceRowIndex: 0-based index of row to move (UI 0 -> Sheet Row 2 -> API 1)
+    // destinationRowIndex: 0-based index of the destination (API)
+    
+    return request(`${spreadsheetId}:batchUpdate`, {
+        method: 'POST',
+        accessToken,
+        body: JSON.stringify({
+            requests: [{
+                moveDimension: {
+                    source: {
+                        sheetId: parseInt(sheetId),
+                        dimension: 'ROWS',
+                        startIndex: sourceRowIndex + 1,
+                        endIndex: sourceRowIndex + 2
+                    },
+                    destinationIndex: destinationRowIndex + 1
+                }
+            }]
+        })
+    });
+};
+
+export const updateValueRange = async (spreadsheetId, sheetName, accessToken, range, values) => {
+    return request(`${spreadsheetId}/values/${sheetName}!${range}?valueInputOption=USER_ENTERED`, {
+        method: 'PUT',
+        accessToken,
+        body: JSON.stringify({ values })
+    });
+};
+
 export const addUniqueDateValidation = async (spreadsheetId, sheetId, accessToken) => {
+    // ... existed before ...
     return request(`${spreadsheetId}:batchUpdate`, {
         method: 'POST',
         accessToken,

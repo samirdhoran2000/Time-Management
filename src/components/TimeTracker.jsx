@@ -53,6 +53,7 @@ const TimeTracker = () => {
     const [editingId, setEditingId] = useState(null); // ID (index) of entry being edited
     const [viewingEntry, setViewingEntry] = useState(null); // Entry being viewed
     const [entries, setEntries] = useState([]);
+    const [sortOrder, setSortOrder] = useState('desc'); // 'desc' = newest first, 'asc' = oldest first
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isFormOpen, setIsFormOpen] = useState(false); // Mobile form visibility
     const formRef = React.useRef(null);
@@ -192,12 +193,18 @@ const TimeTracker = () => {
                 });
             }
 
-            const loadedEntries = mapped.reverse();
-            setEntries(loadedEntries);
+            // Apply sorting (Sheet is usually chronological).
+            const sorted = mapped.sort((a, b) => {
+                const dateA = new Date(parseDateFromSheet(a.date));
+                const dateB = new Date(parseDateFromSheet(b.date));
+                return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            });
+
+            setEntries([...sorted]);
 
             // Re-check current form date against newly loaded data
             const formattedCurrentDate = formatDateForSheet(formData.date);
-            const match = loadedEntries.find(e => e.date === formattedCurrentDate);
+            const match = sorted.find(e => e.date === formattedCurrentDate);
             if (match && editingId === null) {
                 setFormData(mapEntryToForm(match));
                 setEditingId(match.id);
@@ -387,29 +394,13 @@ const TimeTracker = () => {
         }
     };
 
-    const handleSortByDate = async (order = 'desc') => {
-        setIsRefreshing(true);
-        try {
-            const rows = await fetchRows();
-            if (!rows || rows.length <= 1) return;
-
-            const header = rows[0];
-            const dataRows = rows.slice(1);
-
-            dataRows.sort((a, b) => {
-                const dateA = new Date(parseDateFromSheet(String(a[1])));
-                const dateB = new Date(parseDateFromSheet(String(b[1])));
-                return order === 'asc' ? dateA - dateB : dateB - dateA;
-            });
-
-            // Prepare for batch update
-            await sheetsService.updateValueRange(spreadsheetId, sheetName, accessToken, "A2", dataRows);
-            await loadData();
-        } catch (err) {
-            alert("Error sorting: " + err.message);
-        } finally {
-            setIsRefreshing(false);
-        }
+    const handleSortByDate = (order = 'desc') => {
+        setSortOrder(order);
+        setEntries(prev => [...prev].sort((a, b) => {
+            const dateA = new Date(parseDateFromSheet(a.date));
+            const dateB = new Date(parseDateFromSheet(b.date));
+            return order === 'asc' ? dateA - dateB : dateB - dateA;
+        }));
     };
 
     // --- Views ---

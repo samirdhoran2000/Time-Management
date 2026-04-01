@@ -100,7 +100,7 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, onMove, onSort, isR
                                 <div 
                                     key={`card-${e.id}`}
                                     onClick={() => setSelectedId(prev => prev === e.id ? null : e.id)}
-                                    className={`relative p-4 rounded-2xl border transition-all active:scale-[0.98] ${
+                                    className={`relative p-4 rounded-2xl border transition-all active:scale-[0.98] mb-2 ${
                                         isHoliday ? 'bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]' :
                                         isTodayWarning ? 'bg-red-500/10 border-red-500/20' :
                                         isHistoryWarning ? 'bg-blue-500/10 border-blue-500/20' :

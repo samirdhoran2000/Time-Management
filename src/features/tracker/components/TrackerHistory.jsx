@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { ddmmyyyyToIso } from "../utils/dateUtils";
 
 const TrackerHistory = ({ entries, onEdit, onDelete, onView, onMove, onSort, isRefreshing, onRefresh }) => {
+    const [selectedId, setSelectedId] = useState(null);
     return (
         <div className="flex flex-col h-full overflow-hidden">
             <div className="flex items-center justify-between mb-4 shrink-0 transition-all">
@@ -88,18 +90,22 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, onMove, onSort, isR
 
 
                                     return (
-                                        <tr key={e.id} className={`group transition-colors ${
+                                        <tr 
+                                            key={e.id} 
+                                            onClick={() => setSelectedId(prev => prev === e.id ? null : e.id)}
+                                            className={`group transition-colors cursor-pointer lg:cursor-default ${
                                                 isHoliday ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-100' :
                                                 isTodayWarning
                                                 ? 'bg-red-500/10 hover:bg-red-500/20 text-red-100'
                                                 : isHistoryWarning
                                                     ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-50'
                                                     : 'hover:bg-zinc-800/90 even:bg-zinc-800/30'
-                                            }`}>
+                                            } ${selectedId === e.id ? 'ring-1 ring-inset ring-indigo-500/50 bg-indigo-500/5' : ''}`}
+                                        >
                                             <td className="px-2 py-4">
-                                                <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className={`flex flex-col gap-0.5 transition-opacity ${selectedId === e.id ? 'opacity-100' : 'opacity-0 lg:group-hover:opacity-100'}`}>
                                                     <button
-                                                        onClick={() => onMove(e.id, 'up')}
+                                                        onClick={(ev) => { ev.stopPropagation(); onMove(e.id, 'up'); }}
                                                         disabled={e.id === entries.length - 1}
                                                         className="p-0.5 rounded text-zinc-600 hover:text-indigo-400 hover:bg-indigo-500/10 disabled:opacity-0 transition-colors"
                                                         title="Move Up"
@@ -107,7 +113,7 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, onMove, onSort, isR
                                                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 15l7-7 7 7" /></svg>
                                                     </button>
                                                     <button
-                                                        onClick={() => onMove(e.id, 'down')}
+                                                        onClick={(ev) => { ev.stopPropagation(); onMove(e.id, 'down'); }}
                                                         disabled={e.id === 0}
                                                         className="p-0.5 rounded text-zinc-600 hover:text-indigo-400 hover:bg-indigo-500/10 disabled:opacity-0 transition-colors"
                                                         title="Move Down"
@@ -146,22 +152,22 @@ const TrackerHistory = ({ entries, onEdit, onDelete, onView, onMove, onSort, isR
                                             <td className="px-4 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
-                                                        onClick={() => onView(e)}
-                                                        className="p-1.5 rounded-md text-zinc-500 hover:text-teal-400 hover:bg-teal-500/10 transition-colors"
+                                                        onClick={(ev) => { ev.stopPropagation(); onView(e); }}
+                                                        className={`p-1.5 rounded-md transition-colors ${selectedId === e.id ? 'text-teal-400 bg-teal-500/10' : 'text-zinc-500 hover:text-teal-400 hover:bg-teal-500/10'}`}
                                                         title="View Details"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                                     </button>
                                                     <button
-                                                        onClick={() => onEdit(e)}
-                                                        className="p-1.5 rounded-md text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                                                        onClick={(ev) => { ev.stopPropagation(); onEdit(e); }}
+                                                        className={`p-1.5 rounded-md transition-colors ${selectedId === e.id ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10'}`}
                                                         title="Edit"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                                     </button>
                                                     <button
-                                                        onClick={() => onDelete(e.id)}
-                                                        className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                                        onClick={(ev) => { ev.stopPropagation(); onDelete(e.id); }}
+                                                        className={`p-1.5 rounded-md transition-colors ${selectedId === e.id ? 'text-red-400 bg-red-500/10' : 'text-zinc-500 hover:text-red-400 hover:bg-red-500/10'}`}
                                                         title="Delete"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>

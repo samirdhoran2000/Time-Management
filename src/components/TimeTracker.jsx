@@ -56,6 +56,7 @@ const TimeTracker = () => {
     const [sortOrder, setSortOrder] = useState('desc'); // 'desc' = newest first, 'asc' = oldest first
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isFormOpen, setIsFormOpen] = useState(false); // Mobile form visibility
+    const [autoEntryNotification, setAutoEntryNotification] = useState(null); // Auto-entry notification
     const formRef = React.useRef(null);
 
     // --- Effects ---
@@ -123,6 +124,72 @@ const TimeTracker = () => {
             }
         }
     }, [formData.date, entries]);
+
+    // 6. Auto-entry check: If user hasn't filled form for today by 12:00 PM, auto-enter with defaults
+    useEffect(() => {
+        // Only check if we have access to sheets and are not loading
+        if (!accessToken || !entries || loading) return;
+
+        const autoEntryCheck = async () => {
+            const now = new Date();
+            const todayLocal = getTodayLocal();
+            const todayFormatted = formatDateForSheet(todayLocal);
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+
+            // Check if it's 12:00 PM or within 1 hour after (12:00 PM to 1:00 PM window)
+            const isAutoEntryTime = hours === 12 && minutes >= 0 && minutes < 60;
+
+            if (!isAutoEntryTime) return; // Not auto-entry time yet
+
+            // Check if today already has an entry
+            const existingEntry = entries.find(e => e.date === todayFormatted);
+            if (existingEntry) return; // Entry already exists, no need to auto-enter
+
+            // No entry exists and it's auto-entry time, create default entry
+            try {
+                const defaultRow = [
+                    todayFormatted,                      // Date
+                    getDayName(todayLocal),         // Day
+                    '12:00 PM',                    // In Time
+                    '',                             // Out Time
+                    '909',                           // Charges (default per requirement)
+                    '',                             // Expenses
+                    '',                             // Kilometres
+                    '',                             // Location
+                    'no'                            // Petrol
+                ];
+
+                await appendRow(defaultRow);
+
+                // Show notification
+                setAutoEntryNotification({
+                    message: `Auto-entry created for ${todayFormatted} at 12:00 PM with default values`,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+
+                // Reload data to show new entry
+                await loadData();
+
+                // Auto-dismiss notification after 5 seconds
+                setTimeout(() => {
+                    setAutoEntryNotification(null);
+                }, 5000);
+            } catch (err) {
+                console.error('Auto-entry failed:', err);
+                // Don't show alert, just log it - user will see when they refresh
+            }
+        };
+
+        // Set up interval to check every minute
+        const intervalId = setInterval(autoEntryCheck, 60000); // 60 seconds
+
+        // Initial check
+        autoEntryCheck();
+
+        // Cleanup interval on unmount
+        return () => clearInterval(intervalId);
+    }, [accessToken, entries, loading]);
 
 
     // --- Actions ---
@@ -476,6 +543,28 @@ const TimeTracker = () => {
             </nav>
 
             <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 overflow-y-auto lg:overflow-hidden relative">
+
+                {/* Auto-entry Notification */}
+                {autoEntryNotification && (
+                    <div className="fixed top-20 right-6 z-[70] max-w-md bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-4 py-3 rounded-lg shadow-lg animate-in slide-in-from-right-4 fade-in duration-300 flex items-start gap-3">
+                        <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" opacity="0.5" />
+                        </svg>
+                        <div className="flex-1">
+                            <p className="font-semibold text-sm">{autoEntryNotification.message}</p>
+                            <p className="text-xs text-indigo-100 mt-1">{autoEntryNotification.timestamp}</p>
+                        </div>
+                        <button
+                            onClick={() => setAutoEntryNotification(null)}
+                            className="text-indigo-100 hover:text-white transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
 
                 {/* View Modal */}
                 <EntryDetailModal
